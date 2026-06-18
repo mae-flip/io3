@@ -47,6 +47,9 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
+    restart: "no"
+    # One-shot migration job; Coolify must not treat exit as a failure to restart.
+    exclude_from_hc: true
     networks:
       - traefik-public
       - default
@@ -58,6 +61,7 @@ services:
     env_file:
       - .env
     environment:
+      - PROJECT_NAME=${PROJECT_NAME?Variable not set}
       - DOMAIN=${DOMAIN}
       - FRONTEND_HOST=${FRONTEND_HOST?Variable not set}
       - ENVIRONMENT=${ENVIRONMENT}
@@ -90,6 +94,7 @@ services:
     env_file:
       - .env
     environment:
+      - PROJECT_NAME=${PROJECT_NAME?Variable not set}
       - DOMAIN=${DOMAIN}
       - FRONTEND_HOST=${FRONTEND_HOST?Variable not set}
       - ENVIRONMENT=${ENVIRONMENT}
