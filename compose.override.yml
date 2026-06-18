@@ -16,8 +16,6 @@ services:
     command:
       # Enable Docker in Traefik, so that it reads labels from Docker services
       - --providers.docker
-      # Add a constraint to only use services with the label for this stack
-      - --providers.docker.constraints=Label(`traefik.constraint-label`, `traefik-public`)
       # Do not expose all Docker services, only the ones explicitly exposed
       - --providers.docker.exposedbydefault=false
       # Create an entrypoint "http" listening on port 80
@@ -35,14 +33,12 @@ services:
       # Enable the Dashboard and API in insecure mode for local development
       - --api.insecure=true
     labels:
-      # Enable Traefik for this service, to make it available in the public network
       - traefik.enable=true
-      - traefik.constraint-label=traefik-public
       # Dummy https-redirect middleware that doesn't really redirect, only to
       # allow running it locally
       - traefik.http.middlewares.https-redirect.contenttype.autodetect=false
     networks:
-      - traefik-public
+      - coolify
       - default
 
   db:
@@ -130,6 +126,5 @@ services:
       - 9323:9323
 
 networks:
-  traefik-public:
-    # For local dev, don't expect an external Traefik network
+  coolify:
     external: false

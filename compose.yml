@@ -23,7 +23,7 @@ services:
     image: adminer
     restart: always
     networks:
-      - traefik-public
+      - coolify
       - default
     depends_on:
       - db
@@ -31,16 +31,19 @@ services:
       - ADMINER_DESIGN=pepa-linha-dark
     labels:
       - traefik.enable=true
-      - traefik.docker.network=traefik-public
-      - traefik.constraint-label=traefik-public
+      - traefik.docker.network=coolify
+      - traefik.http.middlewares.${STACK_NAME?Variable not set}-https-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.${STACK_NAME?Variable not set}-https-redirect.redirectscheme.permanent=true
+      - traefik.http.services.${STACK_NAME?Variable not set}-adminer.loadbalancer.server.port=8080
       - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-http.rule=Host(`adminer.${DOMAIN?Variable not set}`)
       - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-http.entrypoints=http
-      - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-http.middlewares=https-redirect
+      - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-http.middlewares=${STACK_NAME?Variable not set}-https-redirect
+      - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-http.service=${STACK_NAME?Variable not set}-adminer
       - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-https.rule=Host(`adminer.${DOMAIN?Variable not set}`)
       - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-https.entrypoints=https
       - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-https.tls=true
-      - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-https.tls.certresolver=le
-      - traefik.http.services.${STACK_NAME?Variable not set}-adminer.loadbalancer.server.port=8080
+      - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-https.tls.certresolver=letsencrypt
+      - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-https.service=${STACK_NAME?Variable not set}-adminer
 
   prestart:
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
@@ -51,7 +54,6 @@ services:
     # One-shot migration job; Coolify must not treat exit as a failure to restart.
     exclude_from_hc: true
     networks:
-      - traefik-public
       - default
     depends_on:
       db:
@@ -83,7 +85,7 @@ services:
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
     restart: always
     networks:
-      - traefik-public
+      - coolify
       - default
     depends_on:
       db:
@@ -123,27 +125,25 @@ services:
       dockerfile: backend/Dockerfile
     labels:
       - traefik.enable=true
-      - traefik.docker.network=traefik-public
-      - traefik.constraint-label=traefik-public
-
+      - traefik.docker.network=coolify
+      - traefik.http.middlewares.${STACK_NAME?Variable not set}-https-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.${STACK_NAME?Variable not set}-https-redirect.redirectscheme.permanent=true
       - traefik.http.services.${STACK_NAME?Variable not set}-backend.loadbalancer.server.port=8000
-
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.rule=Host(`api.${DOMAIN?Variable not set}`)
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.entrypoints=http
-
+      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.middlewares=${STACK_NAME?Variable not set}-https-redirect
+      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.service=${STACK_NAME?Variable not set}-backend
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.rule=Host(`api.${DOMAIN?Variable not set}`)
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.entrypoints=https
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.tls=true
-      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.tls.certresolver=le
-
-      # Enable redirection for HTTP and HTTPS
-      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.middlewares=https-redirect
+      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.tls.certresolver=letsencrypt
+      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.service=${STACK_NAME?Variable not set}-backend
 
   frontend:
     image: '${DOCKER_IMAGE_FRONTEND?Variable not set}:${TAG-latest}'
     restart: always
     networks:
-      - traefik-public
+      - coolify
       - default
     build:
       context: .
@@ -153,27 +153,22 @@ services:
         - NODE_ENV=production
     labels:
       - traefik.enable=true
-      - traefik.docker.network=traefik-public
-      - traefik.constraint-label=traefik-public
-
+      - traefik.docker.network=coolify
+      - traefik.http.middlewares.${STACK_NAME?Variable not set}-https-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.${STACK_NAME?Variable not set}-https-redirect.redirectscheme.permanent=true
       - traefik.http.services.${STACK_NAME?Variable not set}-frontend.loadbalancer.server.port=80
-
-      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.rule=Host(`dashboard.${DOMAIN?Variable not set}`)
+      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.rule=Host(`${DOMAIN?Variable not set}`)
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.entrypoints=http
-
-      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.rule=Host(`dashboard.${DOMAIN?Variable not set}`)
+      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.middlewares=${STACK_NAME?Variable not set}-https-redirect
+      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.service=${STACK_NAME?Variable not set}-frontend
+      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.rule=Host(`${DOMAIN?Variable not set}`)
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.entrypoints=https
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.tls=true
-      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.tls.certresolver=le
-      - traefik.http.routers.${STACK_NAME}-frontend-https.rule=Host(`indexofourown.org`) || Host(`www.indexofourown.org`)
-      - traefik.http.routers.${STACK_NAME}-frontend-https.rule=Host(`indexofourown.org`) || Host(`dev.indexofourown.org`)
-
-      # Enable redirection for HTTP and HTTPS
-      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.middlewares=https-redirect
+      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.tls.certresolver=letsencrypt
+      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.service=${STACK_NAME?Variable not set}-frontend
 volumes:
   app-db-data:
 
 networks:
-  traefik-public:
-    # Allow setting it to false for testing
+  coolify:
     external: true
