@@ -51,6 +51,18 @@ function Home() {
         skip={skip}
         platforms={platforms}
       />
+      <p className="text-center font-sans text-sm text-dark-grey">
+        Made with love by{" "}
+        <a
+          href="https://maeflip.itch.io/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-black underline hover:no-underline"
+        >
+          MaeFlip
+        </a>{" "}
+        <span className="text-pink">&lt;3</span>
+      </p>
     </div>
   )
 }
