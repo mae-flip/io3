@@ -15,11 +15,15 @@ import useCurrentUser, { isLoggedIn } from "@/hooks/useAuth"
 import { useItchSubmit } from "@/hooks/useItchSubmit"
 import { cn } from "@/lib/utils"
 
-const navLinks = [
-  { href: "#weekly-features", label: "Weekly Features" },
-  { href: "#about", label: "About Us" },
+type NavLink =
+  | { href: string; label: string; disabled?: boolean }
+  | { to: string; label: string; disabled?: boolean }
+
+const navLinks: NavLink[] = [
+  { href: "#weekly-features", label: "Weekly Features", disabled: true },
+  { href: "#about", label: "About Us", disabled: true },
   { to: "/submit", label: "SUBMIT TO IO3" },
-] as const
+]
 
 function NavAuth({ className }: { className?: string }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
@@ -109,25 +113,36 @@ export function PublicNav() {
             )}
           >
             <nav className="flex flex-wrap items-center gap-4 md:gap-6">
-              {navLinks.map((link) =>
-                "href" in link ? (
-                  <a
-                    key={link.label}
-                    href={link.href}
-                    className="font-head-sm text-sm text-white uppercase tracking-wide hover:underline md:text-base"
-                  >
+              {navLinks.map((link) => {
+                const className = cn(
+                  "font-head-sm text-sm uppercase tracking-wide md:text-base",
+                  link.disabled
+                    ? "cursor-not-allowed text-white/40"
+                    : "text-white hover:underline",
+                )
+
+                if (link.disabled && "href" in link) {
+                  return (
+                    <span
+                      key={link.label}
+                      aria-disabled="true"
+                      className={className}
+                    >
+                      {link.label}
+                    </span>
+                  )
+                }
+
+                return "href" in link ? (
+                  <a key={link.label} href={link.href} className={className}>
                     {link.label}
                   </a>
                 ) : (
-                  <Link
-                    key={link.label}
-                    to={link.to}
-                    className="font-head-sm text-sm text-white uppercase tracking-wide hover:underline md:text-base"
-                  >
+                  <Link key={link.label} to={link.to} className={className}>
                     {link.label}
                   </Link>
-                ),
-              )}
+                )
+              })}
             </nav>
             <NavAuth className="hidden md:block" />
           </div>
