@@ -1,4 +1,6 @@
 .vscode/*
+.ignored/*
+/backups/
 !.vscode/extensions.json
 node_modules/
 /test-results/

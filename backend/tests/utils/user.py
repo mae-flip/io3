@@ -1,49 +1,78 @@
+import secrets
+from datetime import timedelta
+
 from fastapi.testclient import TestClient
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app import crud
+from app.core import security
 from app.core.config import settings
-from app.models import User, UserCreate, UserUpdate
-from tests.utils.utils import random_email, random_lower_string
+from app.core.security import get_password_hash
+from app.models import User
+from tests.utils.utils import random_lower_string
 
 
-def user_authentication_headers(
-    *, client: TestClient, email: str, password: str
-) -> dict[str, str]:
-    data = {"username": email, "password": password}
-
-    r = client.post(f"{settings.API_V1_STR}/login/access-token", data=data)
-    response = r.json()
-    auth_token = response["access_token"]
-    headers = {"Authorization": f"Bearer {auth_token}"}
-    return headers
-
-
-def create_random_user(db: Session) -> User:
-    email = random_email()
-    password = random_lower_string()
-    user_in = UserCreate(email=email, password=password)
-    user = crud.create_user(session=db, user_create=user_in)
+def create_itch_user(
+    db: Session,
+    *,
+    itch_user_id: int | None = None,
+    itch_username: str | None = None,
+    is_owner: bool = False,
+    is_moderator: bool = False,
+) -> User:
+    itch_id = itch_user_id or abs(hash(random_lower_string())) % 10_000_000
+    username = itch_username or f"user_{random_lower_string()[:8]}"
+    user = User(
+        email=crud.itch_user_email(itch_id),
+        hashed_password=get_password_hash(secrets.token_urlsafe(32)),
+        itch_user_id=itch_id,
+        itch_username=username,
+        display_name=username,
+        can_submit=True,
+        is_owner=is_owner,
+        is_moderator=is_moderator,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
     return user
 
 
-def authentication_token_from_email(
-    *, client: TestClient, email: str, db: Session
-) -> dict[str, str]:
-    """
-    Return a valid token for the user with given email.
+def create_random_user(db: Session) -> User:
+    return create_itch_user(db)
 
-    If the user doesn't exist it is created first.
-    """
-    password = random_lower_string()
-    user = crud.get_user_by_email(session=db, email=email)
-    if not user:
-        user_in_create = UserCreate(email=email, password=password)
-        user = crud.create_user(session=db, user_create=user_in_create)
-    else:
-        user_in_update = UserUpdate(password=password)
-        if not user.id:
-            raise Exception("User id not set")
-        user = crud.update_user(session=db, db_user=user, user_in=user_in_update)
 
-    return user_authentication_headers(client=client, email=email, password=password)
+def authentication_token_for_user(*, user: User) -> dict[str, str]:
+    token = security.create_access_token(
+        user.id, expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    return {"Authorization": f"Bearer {token}"}
+
+
+def owner_token_headers(client: TestClient, db: Session) -> dict[str, str]:
+    del client
+    user = db.exec(
+        select(User).where(User.itch_username == settings.ITCH_OWNER_USERNAME)
+    ).first()
+    if user is None:
+        user = create_itch_user(
+            db, itch_username=settings.ITCH_OWNER_USERNAME, is_owner=True
+        )
+    elif not user.is_owner:
+        user.is_owner = True
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    return authentication_token_for_user(user=user)
+
+
+def moderator_token_headers(client: TestClient, db: Session) -> dict[str, str]:
+    del client
+    user = create_itch_user(db, is_moderator=True)
+    return authentication_token_for_user(user=user)
+
+
+def normal_user_token_headers(client: TestClient, db: Session) -> dict[str, str]:
+    del client
+    user = create_itch_user(db)
+    return authentication_token_for_user(user=user)

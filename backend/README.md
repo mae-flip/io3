@@ -91,10 +91,24 @@ Nevertheless, if it doesn't detect a change but a syntax error, it will just sto
 
 ## Backend tests
 
-To test the backend run:
+Tests truncate the database they run against. **Never run pytest against your dev database (`app`) or production.**
+
+Use the test helper script (creates `app_test`, migrates it, then runs pytest):
+
+```console
+$ bash ./scripts/test-local.sh pytest
+```
+
+For coverage (same as CI):
 
 ```console
 $ bash ./scripts/test.sh
+```
+
+Or pass pytest args:
+
+```console
+$ bash ./scripts/test-local.sh pytest tests/api/routes/test_games.py -x
 ```
 
 The tests run with Pytest, modify and add tests to `./backend/tests/`.
@@ -103,13 +117,13 @@ If you use GitHub Actions the tests will run automatically.
 
 ### Test running stack
 
-If your stack is already up and you just want to run the tests, you can use:
+If your stack is already up and you just want to run the tests inside the backend container:
 
 ```bash
 docker compose exec backend bash scripts/tests-start.sh
 ```
 
-That `/app/scripts/tests-start.sh` script just calls `pytest` after making sure that the rest of the stack is running. If you need to pass extra arguments to `pytest`, you can pass them to that command and they will be forwarded.
+That script uses the `app_test` database, not `app`. If you need to pass extra arguments to `pytest`, pass them to that command and they will be forwarded.
 
 For example, to stop on first error:
 

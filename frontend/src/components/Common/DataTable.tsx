@@ -32,18 +32,71 @@ import {
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  rowCount?: number
+  pageIndex?: number
+  pageSize?: number
+  onPageChange?: (pageIndex: number) => void
+  onPageSizeChange?: (pageSize: number) => void
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  rowCount,
+  pageIndex = 0,
+  pageSize = 10,
+  onPageChange,
+  onPageSizeChange,
 }: DataTableProps<TData, TValue>) {
+  const manualPagination = rowCount !== undefined
+
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    ...(manualPagination
+      ? {
+          manualPagination: true,
+          rowCount,
+          pageCount: Math.max(1, Math.ceil(rowCount / pageSize)),
+          state: {
+            pagination: { pageIndex, pageSize },
+          },
+          onPaginationChange: (updater) => {
+            const current = { pageIndex, pageSize }
+            const next =
+              typeof updater === "function" ? updater(current) : updater
+            if (next.pageIndex !== pageIndex) {
+              onPageChange?.(next.pageIndex)
+            }
+            if (next.pageSize !== pageSize) {
+              onPageSizeChange?.(next.pageSize)
+            }
+          },
+        }
+      : {
+          getPaginationRowModel: getPaginationRowModel(),
+        }),
   })
+
+  const totalEntries = manualPagination ? rowCount : data.length
+  const currentPageIndex = manualPagination
+    ? pageIndex
+    : table.getState().pagination.pageIndex
+  const currentPageSize = manualPagination
+    ? pageSize
+    : table.getState().pagination.pageSize
+  const pageCount = manualPagination
+    ? Math.max(1, Math.ceil(rowCount / pageSize))
+    : table.getPageCount()
+  const rangeStart = totalEntries === 0 ? 0 : currentPageIndex * currentPageSize + 1
+  const rangeEnd = Math.min(
+    (currentPageIndex + 1) * currentPageSize,
+    totalEntries,
+  )
+  const showPagination = manualPagination
+    ? totalEntries > currentPageSize
+    : pageCount > 1
 
   return (
     <div className="flex flex-col gap-4">
@@ -90,41 +143,33 @@ export function DataTable<TData, TValue>({
         </TableBody>
       </Table>
 
-      {table.getPageCount() > 1 && (
+      {showPagination && (
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 border-t bg-muted/20">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="text-sm text-muted-foreground">
-              Showing{" "}
-              {table.getState().pagination.pageIndex *
-                table.getState().pagination.pageSize +
-                1}{" "}
-              to{" "}
-              {Math.min(
-                (table.getState().pagination.pageIndex + 1) *
-                  table.getState().pagination.pageSize,
-                data.length,
-              )}{" "}
-              of{" "}
-              <span className="font-medium text-foreground">{data.length}</span>{" "}
+              Showing {rangeStart} to {rangeEnd} of{" "}
+              <span className="font-medium text-foreground">{totalEntries}</span>{" "}
               entries
             </div>
             <div className="flex items-center gap-x-2">
               <p className="text-sm text-muted-foreground">Rows per page</p>
               <Select
-                value={`${table.getState().pagination.pageSize}`}
+                value={`${currentPageSize}`}
                 onValueChange={(value) => {
-                  table.setPageSize(Number(value))
+                  if (manualPagination) {
+                    onPageSizeChange?.(Number(value))
+                  } else {
+                    table.setPageSize(Number(value))
+                  }
                 }}
               >
                 <SelectTrigger className="h-8 w-[70px]">
-                  <SelectValue
-                    placeholder={table.getState().pagination.pageSize}
-                  />
+                  <SelectValue placeholder={currentPageSize} />
                 </SelectTrigger>
                 <SelectContent side="top">
-                  {[5, 10, 25, 50].map((pageSize) => (
-                    <SelectItem key={pageSize} value={`${pageSize}`}>
-                      {pageSize}
+                  {[5, 10, 25, 50].map((size) => (
+                    <SelectItem key={size} value={`${size}`}>
+                      {size}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -136,12 +181,10 @@ export function DataTable<TData, TValue>({
             <div className="flex items-center gap-x-1 text-sm text-muted-foreground">
               <span>Page</span>
               <span className="font-medium text-foreground">
-                {table.getState().pagination.pageIndex + 1}
+                {currentPageIndex + 1}
               </span>
               <span>of</span>
-              <span className="font-medium text-foreground">
-                {table.getPageCount()}
-              </span>
+              <span className="font-medium text-foreground">{pageCount}</span>
             </div>
 
             <div className="flex items-center gap-x-1">
@@ -149,8 +192,14 @@ export function DataTable<TData, TValue>({
                 variant="outline"
                 size="sm"
                 className="h-8 w-8 p-0"
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
+                onClick={() => {
+                  if (manualPagination) {
+                    onPageChange?.(0)
+                  } else {
+                    table.setPageIndex(0)
+                  }
+                }}
+                disabled={currentPageIndex <= 0}
               >
                 <span className="sr-only">Go to first page</span>
                 <ChevronsLeft className="h-4 w-4" />
@@ -159,8 +208,14 @@ export function DataTable<TData, TValue>({
                 variant="outline"
                 size="sm"
                 className="h-8 w-8 p-0"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
+                onClick={() => {
+                  if (manualPagination) {
+                    onPageChange?.(currentPageIndex - 1)
+                  } else {
+                    table.previousPage()
+                  }
+                }}
+                disabled={currentPageIndex <= 0}
               >
                 <span className="sr-only">Go to previous page</span>
                 <ChevronLeft className="h-4 w-4" />
@@ -169,8 +224,14 @@ export function DataTable<TData, TValue>({
                 variant="outline"
                 size="sm"
                 className="h-8 w-8 p-0"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
+                onClick={() => {
+                  if (manualPagination) {
+                    onPageChange?.(currentPageIndex + 1)
+                  } else {
+                    table.nextPage()
+                  }
+                }}
+                disabled={currentPageIndex + 1 >= pageCount}
               >
                 <span className="sr-only">Go to next page</span>
                 <ChevronRight className="h-4 w-4" />
@@ -179,8 +240,14 @@ export function DataTable<TData, TValue>({
                 variant="outline"
                 size="sm"
                 className="h-8 w-8 p-0"
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
+                onClick={() => {
+                  if (manualPagination) {
+                    onPageChange?.(pageCount - 1)
+                  } else {
+                    table.setPageIndex(pageCount - 1)
+                  }
+                }}
+                disabled={currentPageIndex + 1 >= pageCount}
               >
                 <span className="sr-only">Go to last page</span>
                 <ChevronsRight className="h-4 w-4" />

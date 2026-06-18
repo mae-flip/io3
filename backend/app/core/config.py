@@ -44,9 +44,20 @@ class Settings(BaseSettings):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def all_cors_origins(self) -> list[str]:
-        return [str(origin).rstrip("/") for origin in self.BACKEND_CORS_ORIGINS] + [
-            self.FRONTEND_HOST
+        origins = [
+            str(origin).rstrip("/") for origin in self.BACKEND_CORS_ORIGINS
         ]
+        origins.append(self.FRONTEND_HOST.rstrip("/"))
+        if self.ENVIRONMENT == "local":
+            for local_origin in (
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+                "http://localhost",
+                "http://127.0.0.1",
+            ):
+                if local_origin not in origins:
+                    origins.append(local_origin)
+        return origins
 
     PROJECT_NAME: str
     SENTRY_DSN: HttpUrl | None = None
@@ -90,9 +101,18 @@ class Settings(BaseSettings):
     def emails_enabled(self) -> bool:
         return bool(self.SMTP_HOST and self.EMAILS_FROM_EMAIL)
 
-    EMAIL_TEST_USER: EmailStr = "test@example.com"
-    FIRST_SUPERUSER: EmailStr
-    FIRST_SUPERUSER_PASSWORD: str
+    ITCH_OWNER_USERNAME: str = "MaeFlip"
+    ITCH_CACHE_TTL_SECONDS: int = 3600
+    ITCH_FETCH_CONCURRENCY: int = 5
+    ITCH_OAUTH_CLIENT_ID: str = ""
+    ITCH_OAUTH_REDIRECT_URI: str = ""
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def itch_oauth_redirect_uri(self) -> str:
+        if self.ITCH_OAUTH_REDIRECT_URI:
+            return self.ITCH_OAUTH_REDIRECT_URI.rstrip("/")
+        return f"{self.FRONTEND_HOST.rstrip('/')}/submit/callback"
 
     def _check_default_secret(self, var_name: str, value: str | None) -> None:
         if value == "changethis":
@@ -109,10 +129,6 @@ class Settings(BaseSettings):
     def _enforce_non_default_secrets(self) -> Self:
         self._check_default_secret("SECRET_KEY", self.SECRET_KEY)
         self._check_default_secret("POSTGRES_PASSWORD", self.POSTGRES_PASSWORD)
-        self._check_default_secret(
-            "FIRST_SUPERUSER_PASSWORD", self.FIRST_SUPERUSER_PASSWORD
-        )
-
         return self
 
 

@@ -1,70 +1,53 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useNavigate } from "@tanstack/react-router"
 
-import {
-  type Body_login_login_access_token as AccessToken,
-  LoginService,
-  type UserPublic,
-  type UserRegister,
-  UsersService,
-} from "@/client"
+import { type UserPublic, UsersService } from "@/client"
 import { handleError } from "@/utils"
 import useCustomToast from "./useCustomToast"
 
-const isLoggedIn = () => {
+export const isLoggedIn = () => {
   return localStorage.getItem("access_token") !== null
 }
 
-const useAuth = () => {
-  const navigate = useNavigate()
+const useCurrentUser = () => {
   const queryClient = useQueryClient()
   const { showErrorToast } = useCustomToast()
 
-  const { data: user } = useQuery<UserPublic | null, Error>({
+  const { data: user, isLoading, isError } = useQuery<UserPublic | null, Error>({
     queryKey: ["currentUser"],
     queryFn: UsersService.readUserMe,
     enabled: isLoggedIn(),
+    retry: false,
   })
 
-  const signUpMutation = useMutation({
-    mutationFn: (data: UserRegister) =>
-      UsersService.registerUser({ requestBody: data }),
-    onSuccess: () => {
-      navigate({ to: "/login" })
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      localStorage.removeItem("access_token")
+      sessionStorage.removeItem("itch_access_token")
+      sessionStorage.removeItem("itch_games")
+      sessionStorage.removeItem("itch_username")
+      sessionStorage.removeItem("itch_oauth_state")
+      sessionStorage.removeItem("oauth_return_to")
     },
-    onError: handleError.bind(showErrorToast),
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] })
-    },
-  })
-
-  const login = async (data: AccessToken) => {
-    const response = await LoginService.loginAccessToken({
-      formData: data,
-    })
-    localStorage.setItem("access_token", response.access_token)
-  }
-
-  const loginMutation = useMutation({
-    mutationFn: login,
     onSuccess: () => {
-      navigate({ to: "/" })
+      queryClient.setQueryData(["currentUser"], null)
+      queryClient.invalidateQueries({ queryKey: ["games"] })
     },
     onError: handleError.bind(showErrorToast),
   })
 
-  const logout = () => {
-    localStorage.removeItem("access_token")
-    navigate({ to: "/login" })
-  }
+  const isOwner = Boolean(user?.is_owner)
+  const isModerator = Boolean(user?.is_moderator)
+  const canAccessAdmin = isOwner || isModerator
 
   return {
-    signUpMutation,
-    loginMutation,
-    logout,
     user,
+    isLoading,
+    isError,
+    isOwner,
+    isModerator,
+    canAccessAdmin,
+    logout: logoutMutation.mutate,
   }
 }
 
-export { isLoggedIn }
-export default useAuth
+export default useCurrentUser

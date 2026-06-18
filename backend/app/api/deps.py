@@ -1,8 +1,9 @@
 from collections.abc import Generator
 from typing import Annotated
+import uuid
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from pydantic import ValidationError
@@ -14,7 +15,10 @@ from app.core.db import engine
 from app.models import TokenPayload, User
 
 reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.API_V1_STR}/login/access-token"
+    tokenUrl=f"{settings.API_V1_STR}/auth/itch/callback"
+)
+optional_oauth2 = OAuth2PasswordBearer(
+    tokenUrl=f"{settings.API_V1_STR}/auth/itch/callback", auto_error=False
 )
 
 
@@ -25,6 +29,7 @@ def get_db() -> Generator[Session, None, None]:
 
 SessionDep = Annotated[Session, Depends(get_db)]
 TokenDep = Annotated[str, Depends(reusable_oauth2)]
+OptionalTokenDep = Annotated[str | None, Depends(optional_oauth2)]
 
 
 def get_current_user(session: SessionDep, token: TokenDep) -> User:
@@ -40,18 +45,68 @@ def get_current_user(session: SessionDep, token: TokenDep) -> User:
         )
     user = session.get(User, token_data.sub)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
     if not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return user
 
 
+def get_current_user_optional(
+    session: SessionDep, token: OptionalTokenDep
+) -> User | None:
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+        )
+        token_data = TokenPayload(**payload)
+    except (InvalidTokenError, ValidationError):
+        return None
+    user = session.get(User, token_data.sub)
+    if not user or not user.is_active:
+        return None
+    return user
+
+
 CurrentUser = Annotated[User, Depends(get_current_user)]
+OptionalUser = Annotated[User | None, Depends(get_current_user_optional)]
 
 
-def get_current_active_superuser(current_user: CurrentUser) -> User:
-    if not current_user.is_superuser:
+def get_current_owner(current_user: CurrentUser) -> User:
+    if not current_user.is_owner:
         raise HTTPException(
             status_code=403, detail="The user doesn't have enough privileges"
         )
     return current_user
+
+
+def get_current_moderator(current_user: CurrentUser) -> User:
+    if not (current_user.is_moderator or current_user.is_owner):
+        raise HTTPException(
+            status_code=403, detail="The user doesn't have enough privileges"
+        )
+    return current_user
+
+
+CurrentModerator = Annotated[User, Depends(get_current_moderator)]
+CurrentOwner = Annotated[User, Depends(get_current_owner)]
+
+KUDOS_VISITOR_HEADER = "X-Kudos-Visitor-Id"
+
+
+def get_optional_kudos_visitor_id(
+    x_kudos_visitor_id: str | None = Header(default=None, alias=KUDOS_VISITOR_HEADER),
+) -> str | None:
+    if not x_kudos_visitor_id:
+        return None
+    try:
+        return str(uuid.UUID(x_kudos_visitor_id))
+    except ValueError:
+        return None
+
+
+OptionalKudosVisitor = Annotated[str | None, Depends(get_optional_kudos_visitor_id)]

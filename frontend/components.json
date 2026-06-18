@@ -11,12 +11,14 @@
     "prefix": ""
   },
   "iconLibrary": "lucide",
+  "registries": {
+    "@retroui": "https://retroui.dev/r/{name}.json"
+  },
   "aliases": {
     "components": "@/components",
     "utils": "@/lib/utils",
     "ui": "@/components/ui",
     "lib": "@/lib",
     "hooks": "@/hooks"
-  },
-  "registries": {}
+  }
 }

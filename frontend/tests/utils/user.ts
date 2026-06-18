@@ -1,5 +1,7 @@
 import { expect, type Page } from "@playwright/test"
 
+import { acceptAgeGate } from "./ageGate"
+
 export async function signUpNewUser(
   page: Page,
   name: string,
@@ -7,6 +9,7 @@ export async function signUpNewUser(
   password: string,
 ) {
   await page.goto("/signup")
+  await acceptAgeGate(page)
 
   await page.getByTestId("full-name-input").fill(name)
   await page.getByTestId("email-input").fill(email)
@@ -18,18 +21,19 @@ export async function signUpNewUser(
 
 export async function logInUser(page: Page, email: string, password: string) {
   await page.goto("/login")
+  await acceptAgeGate(page)
 
   await page.getByTestId("email-input").fill(email)
   await page.getByTestId("password-input").fill(password)
   await page.getByRole("button", { name: "Log In" }).click()
   await page.waitForURL("/")
   await expect(
-    page.getByText("Welcome back, nice to see you again!"),
+    page.getByRole("heading", { name: "Welcome to Our Index" }),
   ).toBeVisible()
 }
 
 export async function logOutUser(page: Page) {
-  await page.getByTestId("user-menu").click()
-  await page.getByRole("menuitem", { name: "Log out" }).click()
+  await page.evaluate(() => localStorage.removeItem("access_token"))
   await page.goto("/login")
+  await acceptAgeGate(page)
 }
