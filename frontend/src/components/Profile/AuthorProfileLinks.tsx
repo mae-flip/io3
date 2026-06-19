@@ -13,7 +13,8 @@ import { cn } from "@/lib/utils"
 function displayUrl(url: string) {
   try {
     const parsed = new URL(url)
-    const path = parsed.pathname === "/" ? "" : parsed.pathname.replace(/\/$/, "")
+    const path =
+      parsed.pathname === "/" ? "" : parsed.pathname.replace(/\/$/, "")
     return `${parsed.hostname}${path}`
   } catch {
     return url
@@ -88,6 +89,8 @@ export function AuthorProfileLinks({
   }
 
   return (
-    <span className={cn("shrink-0 font-sans text-pink", className)}>{name}</span>
+    <span className={cn("shrink-0 font-sans text-pink", className)}>
+      {name}
+    </span>
   )
 }

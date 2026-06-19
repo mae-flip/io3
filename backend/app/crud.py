@@ -54,6 +54,23 @@ def itch_user_email(itch_user_id: int) -> str:
     return f"itch-{itch_user_id}@example.com"
 
 
+def user_has_contact_email(user: User) -> bool:
+    if user.itch_user_id is None:
+        return True
+    return user.email != itch_user_email(user.itch_user_id)
+
+
+def set_user_contact_email(*, session: Session, user: User, email: str) -> User:
+    existing = session.exec(select(User).where(User.email == email)).first()
+    if existing and existing.id != user.id:
+        raise ValueError("This email address is already in use")
+    user.email = email
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user
+
+
 def get_user_by_itch_user_id(*, session: Session, itch_user_id: int) -> User | None:
     statement = select(User).where(User.itch_user_id == itch_user_id)
     return session.exec(statement).first()
@@ -248,9 +265,29 @@ def create_admin_game(
     return db_game
 
 
-def delete_game(*, session: Session, db_game: Game) -> None:
-    session.delete(db_game)
+def remove_game_from_index(
+    *, session: Session, db_game: Game, removal_reason: str
+) -> Game:
+    db_game.status = GameStatus.archived
+    db_game.removal_reason = removal_reason.strip()
+    db_game.featured_at = None
+    db_game.updated_at = datetime.now(timezone.utc)
+    session.add(db_game)
     session.commit()
+    session.refresh(db_game)
+    return db_game
+
+
+def restore_game_to_index(*, session: Session, db_game: Game) -> Game:
+    if db_game.status != GameStatus.archived:
+        raise ValueError("Game is not removed from the index")
+    db_game.status = GameStatus.approved
+    db_game.removal_reason = None
+    db_game.updated_at = datetime.now(timezone.utc)
+    session.add(db_game)
+    session.commit()
+    session.refresh(db_game)
+    return db_game
 
 
 def admin_games_public(
@@ -267,12 +304,20 @@ def admin_games_public(
                 title=game.itch_cache.title if game.itch_cache else None,
                 status=game.status,
                 featured_at=game.featured_at,
+                removal_reason=game.removal_reason,
                 created_at=game.created_at,
+                updated_at=game.updated_at,
             )
             for game in games
         ],
         count=count,
     )
+
+
+def _admin_games_status_filter(*, removed: bool):
+    if removed:
+        return col(Game.status) == GameStatus.archived
+    return col(Game.status) != GameStatus.archived
 
 
 def admin_games_query(
@@ -281,14 +326,17 @@ def admin_games_query(
     search: str | None = None,
     skip: int = 0,
     limit: int = 100,
+    removed: bool = False,
 ) -> tuple[list[Game], int]:
+    status_filter = _admin_games_status_filter(removed=removed)
     if search and search.strip():
         pattern = f"%{search.strip()}%"
-        statement = _cache_joined_statement()
+        statement = _cache_joined_statement().where(status_filter)
         count_statement = (
             select(func.count())
             .select_from(Game)
             .join(GameItchCache, GameItchCache.game_id == Game.id)
+            .where(status_filter)
         )
         search_filter = or_(
             col(GameItchCache.title).ilike(pattern),
@@ -298,13 +346,16 @@ def admin_games_query(
         statement = statement.where(search_filter)
         count_statement = count_statement.where(search_filter)
     else:
-        statement = select(Game)
-        count_statement = select(func.count()).select_from(Game)
+        statement = select(Game).where(status_filter)
+        count_statement = (
+            select(func.count()).select_from(Game).where(status_filter)
+        )
 
     count = session.exec(count_statement).one()
+    order_column = col(Game.updated_at).desc() if removed else col(Game.created_at).desc()
     games = session.exec(
         statement.options(*_game_load_options())
-        .order_by(col(Game.created_at).desc())
+        .order_by(order_column)
         .offset(skip)
         .limit(limit)
     ).all()

@@ -2,11 +2,12 @@ import { createFileRoute } from "@tanstack/react-router"
 
 import AddGameUrl from "@/components/Admin/AddGameUrl"
 import { AdminGamesTable } from "@/components/Admin/AdminGamesTable"
-import { NewsletterSubscribersCard } from "@/components/Admin/NewsletterSubscribersCard"
+import { RemovedGamesTable } from "@/components/Admin/RemovedGamesTable"
 import { ModeratorsTable } from "@/components/Admin/ModeratorsTable"
-import { ItchLoginButton } from "@/components/Submit/ItchLoginButton"
+import { NewsletterSubscribersCard } from "@/components/Admin/NewsletterSubscribersCard"
 import PendingGames from "@/components/Pending/PendingGames"
 import { Card } from "@/components/retroui/Card"
+import { ItchLoginButton } from "@/components/Submit/ItchLoginButton"
 import useCurrentUser, { isLoggedIn } from "@/hooks/useAuth"
 
 export const Route = createFileRoute("/_public/admin")({
@@ -35,7 +36,9 @@ function AdminAccessDenied() {
 
   return (
     <Card className="mx-auto max-w-md p-8 text-center">
-      <h1 className="font-head text-2xl tracking-wide uppercase">Access denied</h1>
+      <h1 className="font-head text-2xl tracking-wide uppercase">
+        Access denied
+      </h1>
       <p className="mt-2 text-sm text-muted-foreground">
         {user?.itch_username
           ? `Signed in as ${user.itch_username}, but this account does not have admin access.`
@@ -62,7 +65,9 @@ function AdminContent() {
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="font-head text-3xl tracking-wide uppercase">Admin</h1>
+            <h1 className="font-head text-3xl tracking-wide uppercase">
+              Admin
+            </h1>
             <p className="text-muted-foreground">
               Add or remove itch.io game URLs from the index.
             </p>
@@ -70,6 +75,19 @@ function AdminContent() {
           <AddGameUrl />
         </div>
         <AdminGamesTable />
+      </div>
+
+      <div className="flex flex-col gap-4">
+        <div>
+          <h2 className="font-head text-2xl tracking-wide uppercase">
+            Removed games
+          </h2>
+          <p className="text-muted-foreground">
+            Games removed from the index. Restore them here to make them public
+            again.
+          </p>
+        </div>
+        <RemovedGamesTable />
       </div>
 
       {isOwner && (

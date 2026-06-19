@@ -1,8 +1,9 @@
 import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router"
-
+import { Card } from "@/components/retroui/Card"
 import { ItchGamePicker } from "@/components/Submit/ItchGamePicker"
 import { ItchLoginButton } from "@/components/Submit/ItchLoginButton"
-import { Card } from "@/components/retroui/Card"
+import { SubmitContactEmailForm } from "@/components/Submit/SubmitContactEmailForm"
+import useAuth from "@/hooks/useAuth"
 import { useItchSubmit } from "@/hooks/useItchSubmit"
 
 export const Route = createFileRoute("/_public/submit")({
@@ -21,9 +22,20 @@ function SubmitRoute() {
 }
 
 function SubmitPage() {
-  const { isSubmitSessionReady } = useItchSubmit()
+  const { isSubmitSessionReady, itchUsername } = useItchSubmit()
+  const { user, isLoading: isUserLoading } = useAuth()
 
   if (isSubmitSessionReady) {
+    if (isUserLoading) {
+      return (
+        <Card className="mx-auto max-w-md p-8 text-center">
+          <p className="font-head text-lg uppercase">Loading…</p>
+        </Card>
+      )
+    }
+    if (user && !user.has_contact_email) {
+      return <SubmitContactEmailForm itchUsername={itchUsername} />
+    }
     return <ItchGamePicker />
   }
 

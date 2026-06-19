@@ -11,7 +11,10 @@ import { WelcomeSection } from "@/components/Home/WelcomeSection"
 
 const homeSearchSchema = z.object({
   search: z.string().optional(),
-  sort: z.enum(["latest", "title", "author", "kudos"]).optional().default("latest"),
+  sort: z
+    .enum(["latest", "title", "author", "kudos"])
+    .optional()
+    .default("latest"),
   skip: z.number().optional().default(0),
   platforms: z
     .array(z.enum(["web", "windows", "linux", "apple"]))
@@ -28,7 +31,12 @@ export const Route = createFileRoute("/_public/")({
 })
 
 function Home() {
-  const { search = "", sort = "latest", skip = 0, platforms = [] } = Route.useSearch()
+  const {
+    search = "",
+    sort = "latest",
+    skip = 0,
+    platforms = [],
+  } = Route.useSearch()
 
   const { data: featuredData, isLoading: featuredLoading } = useQuery({
     queryKey: ["games", "featured"],

@@ -4,10 +4,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import {
-  platformChipClassName,
-  platformIcon,
-} from "@/lib/platformTags"
+import { platformChipClassName, platformIcon } from "@/lib/platformTags"
 import { cn } from "@/lib/utils"
 
 interface PlatformChipProps {
@@ -27,10 +24,7 @@ export function PlatformChip({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span
-          aria-label={platform.name}
-          className={cn(styles.box, className)}
-        >
+        <span aria-label={platform.name} className={cn(styles.box, className)}>
           <Icon className={styles.icon} aria-hidden />
         </span>
       </TooltipTrigger>

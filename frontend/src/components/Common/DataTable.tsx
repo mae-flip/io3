@@ -89,7 +89,8 @@ export function DataTable<TData, TValue>({
   const pageCount = manualPagination
     ? Math.max(1, Math.ceil(rowCount / pageSize))
     : table.getPageCount()
-  const rangeStart = totalEntries === 0 ? 0 : currentPageIndex * currentPageSize + 1
+  const rangeStart =
+    totalEntries === 0 ? 0 : currentPageIndex * currentPageSize + 1
   const rangeEnd = Math.min(
     (currentPageIndex + 1) * currentPageSize,
     totalEntries,
@@ -148,7 +149,9 @@ export function DataTable<TData, TValue>({
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="text-sm text-muted-foreground">
               Showing {rangeStart} to {rangeEnd} of{" "}
-              <span className="font-medium text-foreground">{totalEntries}</span>{" "}
+              <span className="font-medium text-foreground">
+                {totalEntries}
+              </span>{" "}
               entries
             </div>
             <div className="flex items-center gap-x-2">

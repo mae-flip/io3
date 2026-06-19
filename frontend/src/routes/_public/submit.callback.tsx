@@ -4,8 +4,8 @@ import { useEffect, useRef } from "react"
 
 import { ItchAuthService } from "@/client"
 import { Card } from "@/components/retroui/Card"
-import { useItchSubmit } from "@/hooks/useItchSubmit"
 import useCustomToast from "@/hooks/useCustomToast"
+import { useItchSubmit } from "@/hooks/useItchSubmit"
 import { handleError } from "@/utils"
 
 export const Route = createFileRoute("/_public/submit/callback")({
@@ -15,7 +15,8 @@ export const Route = createFileRoute("/_public/submit/callback")({
 function SubmitCallbackPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { setSession, consumeOAuthState, consumeOAuthReturnTo } = useItchSubmit()
+  const { setSession, consumeOAuthState, consumeOAuthReturnTo } =
+    useItchSubmit()
   const { showErrorToast } = useCustomToast()
   const started = useRef(false)
 
@@ -63,7 +64,13 @@ function SubmitCallbackPage() {
     window.history.replaceState(null, "", window.location.pathname)
     mutation.mutate({ access_token: accessToken, state: returnedState })
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
-  }, [])
+  }, [
+    consumeOAuthState,
+    showErrorToast,
+    navigate,
+    mutation.mutate,
+    consumeOAuthReturnTo,
+  ])
 
   return (
     <Card className="mx-auto max-w-md p-8 text-center">

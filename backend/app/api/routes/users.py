@@ -2,8 +2,14 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
+from app import crud
 from app.api.deps import CurrentUser, SessionDep
-from app.models import UserProfileLinkUpdate, UserProfileLinksUpdate, UserPublic
+from app.models import (
+    UserContactEmailUpdate,
+    UserProfileLinkUpdate,
+    UserProfileLinksUpdate,
+    UserPublic,
+)
 from app.services.user_profile import (
     InvalidProfileLinkUrlError,
     MAX_CUSTOM_PROFILE_LINKS,
@@ -38,6 +44,24 @@ def read_user_me(current_user: CurrentUser) -> Any:
     Get current user.
     """
     return user_to_public(current_user)
+
+
+@router.patch("/me/contact-email", response_model=UserPublic)
+def update_user_contact_email(
+    session: SessionDep,
+    current_user: CurrentUser,
+    body: UserContactEmailUpdate,
+) -> Any:
+    """
+    Save a contact email for itch.io accounts. Required before submitting games.
+    """
+    try:
+        user = crud.set_user_contact_email(
+            session=session, user=current_user, email=body.email
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return user_to_public(user)
 
 
 @router.patch("/me/profile-links", response_model=UserPublic)

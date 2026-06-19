@@ -106,7 +106,9 @@ function normalizeHostname(url: string): string | null {
   if (!trimmed) return null
 
   try {
-    const parsed = new URL(trimmed.includes("://") ? trimmed : `https://${trimmed}`)
+    const parsed = new URL(
+      trimmed.includes("://") ? trimmed : `https://${trimmed}`,
+    )
     return parsed.hostname.toLowerCase().replace(/^www\./, "")
   } catch {
     return null

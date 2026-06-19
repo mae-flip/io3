@@ -1,12 +1,12 @@
 import type { GamePublic } from "@/client"
-import { Card } from "@/components/retroui/Card"
-import { KudosButton } from "@/components/Home/KudosButton"
 import { GamePriceLabel } from "@/components/Home/GamePriceLabel"
 import { GameTagChip } from "@/components/Home/GameTagChip"
+import { KudosButton } from "@/components/Home/KudosButton"
 import { PlatformChip } from "@/components/Home/PlatformChip"
 import { AuthorProfileLinks } from "@/components/Profile/AuthorProfileLinks"
-import { getPrimaryLink } from "@/lib/gameLinks"
+import { Card } from "@/components/retroui/Card"
 import { profileLinksForDisplayedAuthor } from "@/lib/authorProfileLinks"
+import { getPrimaryLink } from "@/lib/gameLinks"
 import { formatGamePrice } from "@/lib/gamePrice"
 import { orderDisplayTags } from "@/lib/gameTags"
 import { orderPlatforms } from "@/lib/platformTags"
@@ -106,7 +106,11 @@ export function CompactGameCard({ game, className }: CompactGameCardProps) {
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 flex-wrap gap-1">
             {platforms.map((platform) => (
-              <PlatformChip key={platform.platform} platform={platform} size="xs" />
+              <PlatformChip
+                key={platform.platform}
+                platform={platform}
+                size="xs"
+              />
             ))}
           </div>
           <KudosButton game={game} size="xs" showLabel={false} />

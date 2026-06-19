@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { FaHeart, FaRegHeart } from "react-icons/fa6"
 
-import { ApiError, GamesService, type GamePublic } from "@/client"
+import { ApiError, type GamePublic, GamesService } from "@/client"
 import {
   Tooltip,
   TooltipContent,
@@ -52,7 +52,9 @@ export function KudosButton({
         className,
       )}
       aria-label={kudosGiven ? "Kudos given" : "Leave kudos"}
-      title={showLabel ? (kudosGiven ? "You left kudos" : "Leave kudos") : undefined}
+      title={
+        showLabel ? (kudosGiven ? "You left kudos" : "Leave kudos") : undefined
+      }
     >
       {showLabel && !kudosGiven ? <span>+ add kudos</span> : null}
       <HeartIcon

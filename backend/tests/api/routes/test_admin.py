@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
@@ -109,18 +111,123 @@ def test_delete_admin_game(
     client: TestClient, db: Session, moderator_token_headers: dict[str, str]
 ) -> None:
     game = create_random_game(db, approved=True)
-    response = client.delete(
+    response = client.request(
+        "DELETE",
         f"{settings.API_V1_STR}/admin/games/{game.id}",
         headers=moderator_token_headers,
+        json={"removal_reason": "Does not meet indexing guidelines"},
     )
     assert response.status_code == 200
-    assert response.json()["message"] == "Game deleted successfully"
+    assert response.json()["message"] == "Game removed from the index"
 
     list_response = client.get(
         f"{settings.API_V1_STR}/admin/games", headers=moderator_token_headers
     )
     ids = [item["id"] for item in list_response.json()["data"]]
     assert str(game.id) not in ids
+
+    removed_response = client.get(
+        f"{settings.API_V1_STR}/admin/games/removed",
+        headers=moderator_token_headers,
+    )
+    assert removed_response.status_code == 200
+    removed_ids = [item["id"] for item in removed_response.json()["data"]]
+    assert str(game.id) in removed_ids
+    removed_game = next(
+        item for item in removed_response.json()["data"] if item["id"] == str(game.id)
+    )
+    assert removed_game["status"] == "archived"
+    assert removed_game["removal_reason"] == "Does not meet indexing guidelines"
+
+
+def test_delete_admin_game_sends_removal_email(
+    client: TestClient, db: Session, moderator_token_headers: dict[str, str]
+) -> None:
+    submitter = create_itch_user(db, contact_email="author@example.com")
+    game = create_random_game(db, approved=True, submitter=submitter)
+
+    with (
+        patch.object(settings, "SMTP_HOST", "smtp.example.com"),
+        patch.object(settings, "EMAILS_FROM_EMAIL", "staff@example.com"),
+        patch("app.services.game_removal_email.send_email") as send_email,
+    ):
+        response = client.request(
+            "DELETE",
+            f"{settings.API_V1_STR}/admin/games/{game.id}",
+            headers=moderator_token_headers,
+            json={"removal_reason": "Does not meet indexing guidelines"},
+        )
+
+    assert response.status_code == 200
+    send_email.assert_called_once()
+    call_kwargs = send_email.call_args.kwargs
+    assert call_kwargs["email_to"] == "author@example.com"
+    assert "Does not meet indexing guidelines" in call_kwargs["html_content"]
+    assert "author@example.com" not in call_kwargs["subject"]
+
+
+def test_delete_admin_game_skips_email_without_contact_email(
+    client: TestClient, db: Session, moderator_token_headers: dict[str, str]
+) -> None:
+    game = create_random_game(db, approved=True)
+
+    with (
+        patch.object(settings, "SMTP_HOST", "smtp.example.com"),
+        patch.object(settings, "EMAILS_FROM_EMAIL", "staff@example.com"),
+        patch("app.services.game_removal_email.send_email") as send_email,
+    ):
+        response = client.request(
+            "DELETE",
+            f"{settings.API_V1_STR}/admin/games/{game.id}",
+            headers=moderator_token_headers,
+            json={"removal_reason": "Does not meet indexing guidelines"},
+        )
+
+    assert response.status_code == 200
+    send_email.assert_not_called()
+
+
+def test_restore_admin_game(
+    client: TestClient, db: Session, moderator_token_headers: dict[str, str]
+) -> None:
+    game = create_random_game(db, approved=True)
+    client.request(
+        "DELETE",
+        f"{settings.API_V1_STR}/admin/games/{game.id}",
+        headers=moderator_token_headers,
+        json={"removal_reason": "Removed for testing restore"},
+    )
+
+    response = client.post(
+        f"{settings.API_V1_STR}/admin/games/{game.id}/restore",
+        headers=moderator_token_headers,
+    )
+    assert response.status_code == 200
+    assert response.json()["status"] == "approved"
+
+    list_response = client.get(
+        f"{settings.API_V1_STR}/admin/games", headers=moderator_token_headers
+    )
+    ids = [item["id"] for item in list_response.json()["data"]]
+    assert str(game.id) in ids
+
+    removed_response = client.get(
+        f"{settings.API_V1_STR}/admin/games/removed",
+        headers=moderator_token_headers,
+    )
+    removed_ids = [item["id"] for item in removed_response.json()["data"]]
+    assert str(game.id) not in removed_ids
+
+
+def test_restore_admin_game_not_removed(
+    client: TestClient, db: Session, moderator_token_headers: dict[str, str]
+) -> None:
+    game = create_random_game(db, approved=True)
+    response = client.post(
+        f"{settings.API_V1_STR}/admin/games/{game.id}/restore",
+        headers=moderator_token_headers,
+    )
+    assert response.status_code == 400
 
 
 def test_feature_admin_game(

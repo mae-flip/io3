@@ -6,7 +6,9 @@ export type AdminGamePublic = {
     title?: (string | null);
     status: GameStatus;
     featured_at?: (string | null);
+    removal_reason?: (string | null);
     created_at?: (string | null);
+    updated_at?: (string | null);
 };
 
 export type AdminGamesPublic = {
@@ -64,6 +66,10 @@ export type GameReject = {
     rejection_reason: string;
 };
 
+export type GameRemove = {
+    removal_reason: string;
+};
+
 export type GameSort = 'latest' | 'title' | 'author' | 'kudos';
 
 export type GamesPublic = {
@@ -114,6 +120,8 @@ export type ItchGamePublic = {
     classification?: string;
     normalized_url?: (string | null);
     already_indexed?: boolean;
+    removed_by_moderator?: boolean;
+    removal_reason?: (string | null);
     itch_search_listed?: boolean;
     publicly_viewable?: boolean;
 };
@@ -175,7 +183,7 @@ export type PlatformPublic = {
     name: string;
 };
 
-export type SubmitBatchItemStatus = 'submitted' | 'duplicate' | 'not_owned' | 'still_listed' | 'not_public' | 'error';
+export type SubmitBatchItemStatus = 'submitted' | 'duplicate' | 'not_owned' | 'still_listed' | 'not_public' | 'removed_by_moderator' | 'error';
 
 export type SubmitBatchResponse = {
     results: Array<SubmitBatchResultItem>;
@@ -203,17 +211,21 @@ export type TagsPublic = {
     count: number;
 };
 
+export type UserContactEmailUpdate = {
+    email: string;
+};
+
 export type UserProfileLink = {
     url: string;
     managed_by_itch?: boolean;
 };
 
-export type UserProfileLinkUpdate = {
-    url: string;
-};
-
 export type UserProfileLinksUpdate = {
     links?: Array<UserProfileLinkUpdate>;
+};
+
+export type UserProfileLinkUpdate = {
+    url: string;
 };
 
 export type UserPublic = {
@@ -222,6 +234,8 @@ export type UserPublic = {
     display_name?: (string | null);
     is_owner?: boolean;
     is_moderator?: boolean;
+    has_contact_email?: boolean;
+    contact_email?: (string | null);
     created_at?: (string | null);
     profile_links?: Array<UserProfileLink>;
 };
@@ -262,8 +276,23 @@ export type AdminUnfeatureAdminGameData = {
 
 export type AdminUnfeatureAdminGameResponse = (AdminGamePublic);
 
+export type AdminReadRemovedAdminGamesData = {
+    limit?: number;
+    search?: (string | null);
+    skip?: number;
+};
+
+export type AdminReadRemovedAdminGamesResponse = (AdminGamesPublic);
+
+export type AdminRestoreAdminGameData = {
+    id: string;
+};
+
+export type AdminRestoreAdminGameResponse = (AdminGamePublic);
+
 export type AdminDeleteAdminGameData = {
     id: string;
+    requestBody: GameRemove;
 };
 
 export type AdminDeleteAdminGameResponse = (Message);
@@ -417,6 +446,12 @@ export type TagsReadGamesByTagData = {
 export type TagsReadGamesByTagResponse = (GamesPublic);
 
 export type UsersReadUserMeResponse = (UserPublic);
+
+export type UsersUpdateUserContactEmailData = {
+    requestBody: UserContactEmailUpdate;
+};
+
+export type UsersUpdateUserContactEmailResponse = (UserPublic);
 
 export type UsersUpdateUserProfileLinksData = {
     requestBody: UserProfileLinksUpdate;

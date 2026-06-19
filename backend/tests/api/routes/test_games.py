@@ -578,6 +578,44 @@ def test_submit_batch_duplicate(
     assert content["results"][0]["status"] == "duplicate"
 
 
+def test_submit_batch_removed_by_moderator(
+    client: TestClient, normal_user_token_headers: dict[str, str], db: Session
+) -> None:
+    game = create_random_game(db, approved=True)
+    crud.remove_game_from_index(
+        session=db, db_game=game, removal_reason="Previously removed by moderator"
+    )
+    itch_games = [
+        ItchGameSummary(
+            id=2,
+            title="Removed Game",
+            url=game.itch_url,
+            published=True,
+            classification="game",
+        )
+    ]
+    with patch(
+        "app.api.routes.games.fetch_itch_games",
+        new_callable=AsyncMock,
+        return_value=itch_games,
+    ):
+        response = client.post(
+            f"{settings.API_V1_STR}/games/submit-batch",
+            headers=normal_user_token_headers,
+            json={
+                "urls": [game.itch_url],
+                "itch_access_token": "itch-token",
+            },
+        )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["submitted_count"] == 0
+    assert content["results"][0]["status"] == "removed_by_moderator"
+    assert (
+        content["results"][0]["detail"] == "Previously removed by moderator"
+    )
+
+
 def test_submit_batch_still_listed(
     client: TestClient, normal_user_token_headers: dict[str, str]
 ) -> None:

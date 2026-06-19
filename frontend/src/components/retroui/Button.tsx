@@ -11,7 +11,8 @@ const buttonVariants = cva(
         default: "bg-white text-black hover:bg-light-grey",
         pink: "bg-pink text-white hover:bg-pink-light",
         orange: "bg-orange text-white",
-        ghost: "border-transparent bg-transparent shadow-none hover:bg-white/20",
+        ghost:
+          "border-transparent bg-transparent shadow-none hover:bg-white/20",
         link: "border-transparent bg-transparent p-0 shadow-none underline-offset-4 hover:underline",
       },
       size: {

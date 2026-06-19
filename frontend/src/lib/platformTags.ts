@@ -1,4 +1,3 @@
-import type { OsPlatform } from "@/client"
 import type { IconType } from "react-icons"
 import {
   FaAndroid,
@@ -7,6 +6,7 @@ import {
   FaLinux,
   FaWindows,
 } from "react-icons/fa6"
+import type { OsPlatform } from "@/client"
 
 import { cn } from "@/lib/utils"
 
@@ -41,7 +41,9 @@ const PLATFORM_ICONS: Record<OsPlatform, IconType> = {
 export function orderPlatforms<T extends { platform: OsPlatform }>(
   platforms: T[],
 ): T[] {
-  const order = new Map(PLATFORM_ORDER.map((platform, index) => [platform, index]))
+  const order = new Map(
+    PLATFORM_ORDER.map((platform, index) => [platform, index]),
+  )
   return [...platforms].sort(
     (left, right) =>
       (order.get(left.platform) ?? 99) - (order.get(right.platform) ?? 99),

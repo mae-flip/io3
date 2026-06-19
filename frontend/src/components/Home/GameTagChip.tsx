@@ -21,7 +21,9 @@ export function GameTagChip({ tag, size = "sm" }: GameTagChipProps) {
         skip: 0,
       }),
     })
-    document.getElementById("full-index")?.scrollIntoView({ behavior: "smooth" })
+    document
+      .getElementById("full-index")
+      ?.scrollIntoView({ behavior: "smooth" })
   }
 
   return (

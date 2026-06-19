@@ -9,10 +9,5 @@ interface ProfileLinkIconProps {
 export function ProfileLinkIcon({ url, className }: ProfileLinkIconProps) {
   const Icon = profileLinkIconForUrl(url)
 
-  return (
-    <Icon
-      className={cn("size-5 shrink-0", className)}
-      aria-hidden
-    />
-  )
+  return <Icon className={cn("size-5 shrink-0", className)} aria-hidden />
 }

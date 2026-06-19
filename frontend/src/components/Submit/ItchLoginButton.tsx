@@ -3,9 +3,9 @@ import type { VariantProps } from "class-variance-authority"
 import { FaItchIo } from "react-icons/fa6"
 
 import { ItchAuthService } from "@/client"
-import { Button, buttonVariants } from "@/components/retroui/Button"
-import { useItchSubmit } from "@/hooks/useItchSubmit"
+import { Button, type buttonVariants } from "@/components/retroui/Button"
 import useCustomToast from "@/hooks/useCustomToast"
+import { useItchSubmit } from "@/hooks/useItchSubmit"
 import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
 

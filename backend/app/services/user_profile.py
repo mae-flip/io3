@@ -2,6 +2,7 @@ import re
 
 from pydantic import HttpUrl, TypeAdapter, ValidationError
 
+from app import crud
 from app.models import User, UserProfileLink, UserPublic
 
 MAX_CUSTOM_PROFILE_LINKS = 7
@@ -109,12 +110,15 @@ def profile_links_for_displayed_author(
 
 
 def user_to_public(user: User) -> UserPublic:
+    has_contact_email = crud.user_has_contact_email(user)
     return UserPublic(
         id=user.id,
         itch_username=user.itch_username,
         display_name=user.display_name,
         is_owner=user.is_owner,
         is_moderator=user.is_moderator,
+        has_contact_email=has_contact_email,
+        contact_email=user.email if has_contact_email else None,
         created_at=user.created_at,
         profile_links=resolved_profile_links(user),
     )

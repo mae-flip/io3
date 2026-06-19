@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query"
 import { CircleHelp } from "lucide-react"
 import { useState } from "react"
 
-import { ApiError, GamesService, type SubmitBatchResponse } from "@/client"
+import { type ApiError, GamesService, type SubmitBatchResponse } from "@/client"
 import { Button } from "@/components/retroui/Button"
 import { Card } from "@/components/retroui/Card"
 import { SubmitResults } from "@/components/Submit/SubmitResults"
@@ -11,27 +11,42 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { useItchSubmit } from "@/hooks/useItchSubmit"
 import useCustomToast from "@/hooks/useCustomToast"
+import { useItchSubmit } from "@/hooks/useItchSubmit"
 import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
 
 const NOT_PUBLIC_HELP =
   "io3 only indexes games anyone can view without a download key or password. Restricted itch.io games and password-protected pages cannot be submitted."
 
+const REMOVED_BY_MODERATOR_FALLBACK =
+  "This game was removed from the index by an io3 moderator."
+
 type GameRowStatus = {
   label: string
   className: string
   disabled: boolean
+  helpTitle?: string
   helpText?: string
 }
 
 function gameRowStatus(game: {
   published?: boolean
   already_indexed?: boolean
+  removed_by_moderator?: boolean
+  removal_reason?: string | null
   itch_search_listed?: boolean
   publicly_viewable?: boolean
 }): GameRowStatus {
+  if (game.removed_by_moderator) {
+    return {
+      label: "REMOVED BY IO3 MODERATOR",
+      className: "bg-pink/20",
+      disabled: true,
+      helpTitle: "Removal Reason",
+      helpText: game.removal_reason?.trim() || REMOVED_BY_MODERATOR_FALLBACK,
+    }
+  }
   if (game.already_indexed) {
     return {
       label: "Already indexed on io3!",
@@ -71,6 +86,7 @@ function gameRowStatus(game: {
 function isSelectableGame(game: {
   published?: boolean
   already_indexed?: boolean
+  removed_by_moderator?: boolean
   itch_search_listed?: boolean
   publicly_viewable?: boolean
 }) {
@@ -78,6 +94,7 @@ function isSelectableGame(game: {
     game.published !== false &&
     game.publicly_viewable !== false &&
     !game.already_indexed &&
+    !game.removed_by_moderator &&
     !game.itch_search_listed
   )
 }
@@ -103,6 +120,9 @@ function StatusBadge({ status }: { status: GameRowStatus }) {
             </button>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="max-w-xs">
+            {status.helpTitle && (
+              <p className="font-bold">{status.helpTitle}</p>
+            )}
             {status.helpText}
           </TooltipContent>
         </Tooltip>
@@ -171,8 +191,8 @@ export function ItchGamePicker() {
           <h1 className="font-head text-3xl uppercase">Submit to io3</h1>
           <p className="mt-1 text-sm text-dark-grey">
             Logged in as{" "}
-            <span className="font-medium text-black">{itchUsername}</span>
-            . Only de-listed, publicly viewable games can be submitted.
+            <span className="font-medium text-black">{itchUsername}</span>. Only
+            de-listed, publicly viewable games can be submitted.
           </p>
         </div>
         <Button type="button" variant="ghost" size="sm" onClick={clearSession}>

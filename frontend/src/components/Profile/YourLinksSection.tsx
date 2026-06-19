@@ -3,9 +3,9 @@ import { Plus, Trash2 } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
 import { type UserProfileLink, UsersService } from "@/client"
+import { SectionTitle } from "@/components/Home/SectionShell"
 import { ItchManagedField } from "@/components/Profile/ItchManagedField"
 import { ProfileLinkIcon } from "@/components/Profile/ProfileLinkIcon"
-import { SectionTitle } from "@/components/Home/SectionShell"
 import { Button } from "@/components/retroui/Button"
 import { Input } from "@/components/retroui/Input"
 import useCustomToast from "@/hooks/useCustomToast"
@@ -116,10 +116,7 @@ export function YourLinksSection({
             key={index}
             className="flex items-center gap-3 border-2 border-black/10 bg-faded-plastic/40 p-3"
           >
-            <ProfileLinkIcon
-              url={url}
-              className="text-dark-grey"
-            />
+            <ProfileLinkIcon url={url} className="text-dark-grey" />
             <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
               <Input
                 id={`profile-link-url-${index}`}

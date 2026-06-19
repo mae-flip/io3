@@ -13,6 +13,7 @@ from app.models import (
     AdminGamesPublic,
     Game,
     GameCreate,
+    GameRemove,
     GameStatus,
     Message,
     ModeratorUserPublic,
@@ -21,6 +22,8 @@ from app.models import (
     NewsletterSubscribersPublic,
     User,
 )
+
+from app.services.game_removal_email import notify_submitter_of_game_removal
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -33,7 +36,9 @@ def _admin_game_public(game: Game) -> AdminGamePublic:
         title=cache.title if cache else None,
         status=game.status,
         featured_at=game.featured_at,
+        removal_reason=game.removal_reason,
         created_at=game.created_at,
+        updated_at=game.updated_at,
     )
 
 
@@ -102,15 +107,53 @@ def unfeature_admin_game(
     return _admin_game_public(loaded)
 
 
-@router.delete("/games/{id}", response_model=Message)
-def delete_admin_game(
+@router.get("/games/removed", response_model=AdminGamesPublic)
+def read_removed_admin_games(
+    session: SessionDep,
+    current_user: CurrentModerator,
+    skip: int = 0,
+    limit: int = 100,
+    search: str | None = None,
+) -> Any:
+    games, count = crud.admin_games_query(
+        session=session, search=search, skip=skip, limit=limit, removed=True
+    )
+    return crud.admin_games_public(session, games, count)
+
+
+@router.post("/games/{id}/restore", response_model=AdminGamePublic)
+def restore_admin_game(
     session: SessionDep, current_user: CurrentModerator, id: uuid.UUID
 ) -> Any:
     game = crud.load_game(session, id)
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
-    crud.delete_game(session=session, db_game=game)
-    return Message(message="Game deleted successfully")
+    try:
+        restored = crud.restore_game_to_index(session=session, db_game=game)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    loaded = crud.load_game(session, restored.id)
+    assert loaded
+    return _admin_game_public(loaded)
+
+
+@router.delete("/games/{id}", response_model=Message)
+def delete_admin_game(
+    session: SessionDep,
+    current_user: CurrentModerator,
+    id: uuid.UUID,
+    body: GameRemove,
+) -> Any:
+    game = crud.load_game(session, id)
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+    if game.status == GameStatus.archived:
+        raise HTTPException(status_code=400, detail="Game is already removed")
+    removed = crud.remove_game_from_index(
+        session=session, db_game=game, removal_reason=body.removal_reason
+    )
+    notify_submitter_of_game_removal(session=session, game=removed)
+    return Message(message="Game removed from the index")
 
 
 @router.get("/users", response_model=ModeratorUsersPublic)

@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { AdminReadAdminGamesData, AdminReadAdminGamesResponse, AdminCreateAdminGameData, AdminCreateAdminGameResponse, AdminFeatureAdminGameData, AdminFeatureAdminGameResponse, AdminUnfeatureAdminGameData, AdminUnfeatureAdminGameResponse, AdminDeleteAdminGameData, AdminDeleteAdminGameResponse, AdminReadAdminUsersData, AdminReadAdminUsersResponse, AdminUpdateAdminUserData, AdminUpdateAdminUserResponse, AdminReadNewsletterSubscribersResponse, AdminDownloadNewsletterSubscribersCsvResponse, GamesReadGamesData, GamesReadGamesResponse, GamesCreateGameData, GamesCreateGameResponse, GamesReadFeaturedGamesData, GamesReadFeaturedGamesResponse, GamesReadMyGamesData, GamesReadMyGamesResponse, GamesPrefillItchMetadataData, GamesPrefillItchMetadataResponse, GamesCheckDuplicateData, GamesCheckDuplicateResponse, GamesSubmitGamesBatchData, GamesSubmitGamesBatchResponse, GamesReadGameData, GamesReadGameResponse, GamesAddKudosData, GamesAddKudosResponse, GamesUpdateGameData, GamesUpdateGameResponse, ItchAuthItchAuthorizeResponse, ItchAuthItchCallbackData, ItchAuthItchCallbackResponse, ModerationReadModerationQueueData, ModerationReadModerationQueueResponse, ModerationApproveGameData, ModerationApproveGameResponse, ModerationFeatureGameData, ModerationFeatureGameResponse, ModerationRejectGameData, ModerationRejectGameResponse, ModerationCheckDuplicatesData, ModerationCheckDuplicatesResponse, NewsletterSubscribeToNewsletterData, NewsletterSubscribeToNewsletterResponse, TagsReadTagsResponse, TagsReadGamesByTagData, TagsReadGamesByTagResponse, UsersReadUserMeResponse, UsersUpdateUserProfileLinksData, UsersUpdateUserProfileLinksResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { AdminReadAdminGamesData, AdminReadAdminGamesResponse, AdminCreateAdminGameData, AdminCreateAdminGameResponse, AdminFeatureAdminGameData, AdminFeatureAdminGameResponse, AdminUnfeatureAdminGameData, AdminUnfeatureAdminGameResponse, AdminReadRemovedAdminGamesData, AdminReadRemovedAdminGamesResponse, AdminRestoreAdminGameData, AdminRestoreAdminGameResponse, AdminDeleteAdminGameData, AdminDeleteAdminGameResponse, AdminReadAdminUsersData, AdminReadAdminUsersResponse, AdminUpdateAdminUserData, AdminUpdateAdminUserResponse, AdminReadNewsletterSubscribersResponse, AdminDownloadNewsletterSubscribersCsvResponse, GamesReadGamesData, GamesReadGamesResponse, GamesCreateGameData, GamesCreateGameResponse, GamesReadFeaturedGamesData, GamesReadFeaturedGamesResponse, GamesReadMyGamesData, GamesReadMyGamesResponse, GamesPrefillItchMetadataData, GamesPrefillItchMetadataResponse, GamesCheckDuplicateData, GamesCheckDuplicateResponse, GamesSubmitGamesBatchData, GamesSubmitGamesBatchResponse, GamesReadGameData, GamesReadGameResponse, GamesAddKudosData, GamesAddKudosResponse, GamesUpdateGameData, GamesUpdateGameResponse, ItchAuthItchAuthorizeResponse, ItchAuthItchCallbackData, ItchAuthItchCallbackResponse, ModerationReadModerationQueueData, ModerationReadModerationQueueResponse, ModerationApproveGameData, ModerationApproveGameResponse, ModerationFeatureGameData, ModerationFeatureGameResponse, ModerationRejectGameData, ModerationRejectGameResponse, ModerationCheckDuplicatesData, ModerationCheckDuplicatesResponse, NewsletterSubscribeToNewsletterData, NewsletterSubscribeToNewsletterResponse, TagsReadTagsResponse, TagsReadGamesByTagData, TagsReadGamesByTagResponse, UsersReadUserMeResponse, UsersUpdateUserContactEmailData, UsersUpdateUserContactEmailResponse, UsersUpdateUserProfileLinksData, UsersUpdateUserProfileLinksResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
 
 export class AdminService {
     /**
@@ -90,6 +90,50 @@ export class AdminService {
     }
     
     /**
+     * Read Removed Admin Games
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @param data.search
+     * @returns AdminGamesPublic Successful Response
+     * @throws ApiError
+     */
+    public static readRemovedAdminGames(data: AdminReadRemovedAdminGamesData = {}): CancelablePromise<AdminReadRemovedAdminGamesResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/admin/games/removed',
+            query: {
+                skip: data.skip,
+                limit: data.limit,
+                search: data.search
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Restore Admin Game
+     * @param data The data for the request.
+     * @param data.id
+     * @returns AdminGamePublic Successful Response
+     * @throws ApiError
+     */
+    public static restoreAdminGame(data: AdminRestoreAdminGameData): CancelablePromise<AdminRestoreAdminGameResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/admin/games/{id}/restore',
+            path: {
+                id: data.id
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
      * Delete Admin Game
      * @param data The data for the request.
      * @param data.id
@@ -103,6 +147,8 @@ export class AdminService {
             path: {
                 id: data.id
             },
+            body: data.requestBody,
+            mediaType: 'application/json',
             errors: {
                 422: 'Validation Error'
             }
@@ -630,6 +676,26 @@ export class UsersService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/users/me'
+        });
+    }
+    
+    /**
+     * Update User Contact Email
+     * Save a contact email for itch.io accounts. Required before submitting games.
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns UserPublic Successful Response
+     * @throws ApiError
+     */
+    public static updateUserContactEmail(data: UsersUpdateUserContactEmailData): CancelablePromise<UsersUpdateUserContactEmailResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/users/me/contact-email',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
         });
     }
     

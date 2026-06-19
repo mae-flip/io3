@@ -8,6 +8,7 @@ import emails  # type: ignore[import-untyped]
 import jwt
 from jinja2 import Template
 from jwt.exceptions import InvalidTokenError
+from markupsafe import escape
 
 from app.core import security
 from app.core.config import settings
@@ -95,6 +96,26 @@ def generate_new_account_email(
             "password": password,
             "email": email_to,
             "link": settings.FRONTEND_HOST,
+        },
+    )
+    return EmailData(html_content=html_content, subject=subject)
+
+
+def generate_game_removed_email(
+    *,
+    email_to: str,
+    game_title: str,
+    removal_reason: str,
+) -> EmailData:
+    project_name = settings.PROJECT_NAME
+    subject = f'{project_name} - Your project "{game_title}" was removed from the index'
+    html_content = render_email_template(
+        template_name="game_removed.html",
+        context={
+            "project_name": settings.PROJECT_NAME,
+            "email": email_to,
+            "game_title": escape(game_title),
+            "removal_reason": escape(removal_reason),
         },
     )
     return EmailData(html_content=html_content, subject=subject)

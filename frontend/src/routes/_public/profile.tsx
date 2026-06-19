@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router"
 
 import { PageTemplate } from "@/components/Common/PageTemplate"
+import { SectionShell } from "@/components/Home/SectionShell"
 import { ProfileViewSection } from "@/components/Profile/ProfileViewSection"
 import { YourLinksSection } from "@/components/Profile/YourLinksSection"
-import { SectionShell } from "@/components/Home/SectionShell"
-import { ItchLoginButton } from "@/components/Submit/ItchLoginButton"
 import { Card } from "@/components/retroui/Card"
+import { ItchLoginButton } from "@/components/Submit/ItchLoginButton"
 import useCurrentUser, { isLoggedIn } from "@/hooks/useAuth"
 
 export const Route = createFileRoute("/_public/profile")({
@@ -28,12 +28,13 @@ function ProfileLoginGate() {
   )
 }
 
-function ProfileEditor({ user }: { user: NonNullable<ReturnType<typeof useCurrentUser>["user"]> }) {
+function ProfileEditor({
+  user,
+}: {
+  user: NonNullable<ReturnType<typeof useCurrentUser>["user"]>
+}) {
   return (
-    <PageTemplate
-      title="Profile"
-      description="Manage how you appear on io3."
-    >
+    <PageTemplate title="Profile" description="Manage how you appear on io3.">
       <div className="flex flex-col gap-6">
         <SectionShell className="bg-white p-4 md:p-5">
           <ProfileViewSection user={user} />
@@ -58,10 +59,7 @@ function ProfilePage() {
 
   if (isLoading || !user) {
     return (
-      <PageTemplate
-        title="Profile"
-        description="Manage how you appear on io3."
-      >
+      <PageTemplate title="Profile" description="Manage how you appear on io3.">
         <SectionShell className="bg-white p-4 md:p-5" aria-busy="true">
           {null}
         </SectionShell>

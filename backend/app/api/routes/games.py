@@ -134,6 +134,12 @@ async def submit_games_batch(
             detail="Your account is not yet eligible to submit games",
         )
 
+    if not crud.user_has_contact_email(current_user):
+        raise HTTPException(
+            status_code=403,
+            detail="Add a contact email to your account before submitting games",
+        )
+
     try:
         itch_games = await fetch_itch_games(body.itch_access_token)
     except ItchApiError as exc:
@@ -160,15 +166,31 @@ async def submit_games_batch(
             )
             continue
 
-        if crud.find_game_by_itch_url(session=session, normalized_url=normalized):
+        existing = crud.find_game_by_itch_url(
+            session=session, normalized_url=normalized
+        )
+        if existing:
             skipped_count += 1
-            results.append(
-                SubmitBatchResultItem(
-                    url=raw_url,
-                    status=SubmitBatchItemStatus.duplicate,
-                    detail="Game is already indexed",
+            if existing.status == GameStatus.archived:
+                detail = (
+                    existing.removal_reason
+                    or "This game was removed from the index by an io3 moderator"
                 )
-            )
+                results.append(
+                    SubmitBatchResultItem(
+                        url=raw_url,
+                        status=SubmitBatchItemStatus.removed_by_moderator,
+                        detail=detail,
+                    )
+                )
+            else:
+                results.append(
+                    SubmitBatchResultItem(
+                        url=raw_url,
+                        status=SubmitBatchItemStatus.duplicate,
+                        detail="Game is already indexed",
+                    )
+                )
             continue
 
         owned_game = owned.get(normalized)

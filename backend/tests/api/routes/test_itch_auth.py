@@ -102,6 +102,69 @@ def test_itch_callback_creates_shadow_user(client: TestClient, db: Session) -> N
     assert user.can_submit is True
 
 
+def test_itch_callback_marks_moderator_removed_games(
+    client: TestClient, db: Session
+) -> None:
+    from tests.utils.game import create_random_game
+
+    game = create_random_game(db, approved=True)
+    crud.remove_game_from_index(
+        session=db, db_game=game, removal_reason="Not eligible for io3"
+    )
+
+    profile = ItchProfileUser(
+        id=5252,
+        username="removeddev",
+        display_name="Removed Dev",
+        url="https://removeddev.itch.io",
+    )
+    games = [
+        ItchGameSummary(
+            id=101,
+            title="Removed Game",
+            url=game.itch_url,
+            published=True,
+            classification="game",
+        ),
+    ]
+    state = create_oauth_state()
+
+    with (
+        patch.object(settings, "ITCH_OAUTH_CLIENT_ID", "test-client-id"),
+        patch(
+            "app.api.routes.itch_auth.fetch_itch_profile",
+            new_callable=AsyncMock,
+            return_value=profile,
+        ),
+        patch(
+            "app.api.routes.itch_auth.fetch_itch_games",
+            new_callable=AsyncMock,
+            return_value=games,
+        ),
+        patch(
+            "app.api.routes.itch_auth.listing_status_for_games",
+            new_callable=AsyncMock,
+            return_value={game.itch_url: False},
+        ),
+        patch(
+            "app.api.routes.itch_auth.public_viewability_for_games",
+            new_callable=AsyncMock,
+            return_value={game.itch_url: True},
+        ),
+    ):
+        response = client.post(
+            f"{settings.API_V1_STR}/auth/itch/callback",
+            json={"access_token": "itch-token", "state": state},
+        )
+
+    assert response.status_code == 200
+    content = response.json()
+    assert len(content["games"]) == 1
+    assert content["games"][0]["removed_by_moderator"] is True
+    assert content["games"][0]["already_indexed"] is False
+    assert content["games"][0]["removal_reason"] == "Not eligible for io3"
+
+
 def test_itch_callback_sets_owner_for_configured_username(
     client: TestClient, db: Session
 ) -> None:

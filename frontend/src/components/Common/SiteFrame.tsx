@@ -1,6 +1,10 @@
 import type { CSSProperties, ReactNode } from "react"
 
-import { SiteFrameRail, siteFrameRailWidth, HEADER_HEIGHT } from "@/components/Common/SiteFrameRail"
+import {
+  HEADER_HEIGHT,
+  SiteFrameRail,
+  siteFrameRailWidth,
+} from "@/components/Common/SiteFrameRail"
 import { cn } from "@/lib/utils"
 
 interface SiteFrameProps {
@@ -26,7 +30,9 @@ export function SiteFrame({ children, className }: SiteFrameProps) {
         }
       >
         <SiteFrameRail />
-        <div className="relative z-10 flex min-h-[inherit] flex-col">{children}</div>
+        <div className="relative z-10 flex min-h-[inherit] flex-col">
+          {children}
+        </div>
       </div>
     </div>
   )

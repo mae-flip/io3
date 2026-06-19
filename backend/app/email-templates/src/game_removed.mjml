@@ -1,0 +1,13 @@
+<mjml>
+  <mj-body background-color="#fafbfc">
+    <mj-section background-color="#fff" padding="40px 20px">
+      <mj-column vertical-align="middle" width="100%">
+        <mj-text align="left" font-size="16px" padding-left="25px" padding-right="25px" font-family="Arial, Helvetica, sans-serif" color="#555">Your project: <strong>{{ game_title }}</strong> has been removed from the io3 index for the following reason:</mj-text>
+        <mj-text align="left" font-size="16px" padding-left="25px" padding-right="25px" font-family="Arial, Helvetica, sans-serif" color="#555">{{ removal_reason }}</mj-text>
+        <mj-text align="left" font-size="16px" padding-left="25px" padding-right="25px" font-family="Arial, Helvetica, sans-serif" color="#555">You can appeal this decision by replying to this email.</mj-text>
+        <mj-text align="left" font-size="16px" padding-left="25px" padding-right="25px" font-family="Arial, Helvetica, sans-serif" color="#555">Best,<br />io3 staff</mj-text>
+        <mj-divider border-color="#ccc" border-width="2px"></mj-divider>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

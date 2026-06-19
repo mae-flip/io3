@@ -7,8 +7,8 @@ export function Footer() {
         <div className="text-center sm:text-left">
           <p className="font-medium">io3</p>
           <p className="text-dark-grey text-sm">
-            A community index for queer and erotic indie games de-indexed on itch.io.
-            Links only — we never host game files.
+            A community index for queer and erotic indie games de-indexed on
+            itch.io. Links only — we never host game files.
           </p>
         </div>
         <div className="flex flex-col items-center gap-2 sm:items-end">

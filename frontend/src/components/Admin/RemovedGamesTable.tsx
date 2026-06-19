@@ -6,11 +6,11 @@ import { DataTable } from "@/components/Common/DataTable"
 import PendingGames from "@/components/Pending/PendingGames"
 import { Input } from "@/components/retroui/Input"
 
-import { gameColumns } from "./gameColumns"
+import { removedGameColumns } from "./removedGameColumns"
 
 const DEFAULT_PAGE_SIZE = 10
 
-export function AdminGamesTable() {
+export function RemovedGamesTable() {
   const [search, setSearch] = useState("")
   const [debouncedSearch, setDebouncedSearch] = useState("")
   const [pageIndex, setPageIndex] = useState(0)
@@ -25,9 +25,9 @@ export function AdminGamesTable() {
   }, [search])
 
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["adminGames", debouncedSearch, pageIndex, pageSize],
+    queryKey: ["adminRemovedGames", debouncedSearch, pageIndex, pageSize],
     queryFn: () =>
-      AdminService.readAdminGames({
+      AdminService.readRemovedAdminGames({
         skip: pageIndex * pageSize,
         limit: pageSize,
         search: debouncedSearch || undefined,
@@ -42,18 +42,20 @@ export function AdminGamesTable() {
         type="search"
         value={search}
         onChange={(event) => setSearch(event.target.value)}
-        placeholder="Search by title, URL, or author…"
-        aria-label="Search games"
+        placeholder="Search removed games…"
+        aria-label="Search removed games"
         className="max-w-md"
       />
       {isLoading ? (
         <PendingGames />
+      ) : totalCount === 0 ? (
+        <p className="text-sm text-muted-foreground">No removed games.</p>
       ) : (
         <div
           className={isFetching ? "opacity-60 transition-opacity" : undefined}
         >
           <DataTable
-            columns={gameColumns}
+            columns={removedGameColumns}
             data={data?.data ?? []}
             rowCount={totalCount}
             pageIndex={pageIndex}

@@ -17,13 +17,14 @@ def create_itch_user(
     *,
     itch_user_id: int | None = None,
     itch_username: str | None = None,
+    contact_email: str | None = None,
     is_owner: bool = False,
     is_moderator: bool = False,
 ) -> User:
     itch_id = itch_user_id or abs(hash(random_lower_string())) % 10_000_000
     username = itch_username or f"user_{random_lower_string()[:8]}"
     user = User(
-        email=crud.itch_user_email(itch_id),
+        email=contact_email or crud.itch_user_email(itch_id),
         hashed_password=get_password_hash(secrets.token_urlsafe(32)),
         itch_user_id=itch_id,
         itch_username=username,
@@ -74,5 +75,7 @@ def moderator_token_headers(client: TestClient, db: Session) -> dict[str, str]:
 
 def normal_user_token_headers(client: TestClient, db: Session) -> dict[str, str]:
     del client
-    user = create_itch_user(db)
+    user = create_itch_user(
+        db, contact_email=f"submit-{random_lower_string()[:8]}@example.com"
+    )
     return authentication_token_for_user(user=user)

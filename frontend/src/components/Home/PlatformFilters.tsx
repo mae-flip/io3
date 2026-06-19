@@ -1,10 +1,10 @@
-import type { IndexPlatformFilter } from "@/lib/platformTags"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import type { IndexPlatformFilter } from "@/lib/platformTags"
 import { INDEX_PLATFORM_FILTERS, platformIcon } from "@/lib/platformTags"
 import { cn } from "@/lib/utils"
 

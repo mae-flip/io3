@@ -1,14 +1,13 @@
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
-
-import type { IndexPlatformFilter } from "@/lib/platformTags"
 import { GamesService } from "@/client"
 import { CompactGameCard } from "@/components/Home/CompactGameCard"
 import { GameGridSkeleton } from "@/components/Home/GameGridSkeleton"
 import { PlatformFilters } from "@/components/Home/PlatformFilters"
 import { SectionShell, SectionTitle } from "@/components/Home/SectionShell"
-import { SortTabs, type SortOption } from "@/components/Home/SortTabs"
+import { type SortOption, SortTabs } from "@/components/Home/SortTabs"
 import { Button } from "@/components/retroui/Button"
+import type { IndexPlatformFilter } from "@/lib/platformTags"
 
 const PAGE_SIZE = 20
 
@@ -65,7 +64,10 @@ export function FullIndexSection({
         <SectionTitle>Full Index</SectionTitle>
       </div>
 
-      <SortTabs value={sort} onChange={(next) => updateSearch({ sort: next, skip: 0 })} />
+      <SortTabs
+        value={sort}
+        onChange={(next) => updateSearch({ sort: next, skip: 0 })}
+      />
       <PlatformFilters
         value={platforms}
         onChange={(next) => updateSearch({ platforms: next, skip: 0 })}
@@ -95,7 +97,9 @@ export function FullIndexSection({
                 type="button"
                 variant="default"
                 size="sm"
-                onClick={() => updateSearch({ skip: Math.max(0, skip - PAGE_SIZE) })}
+                onClick={() =>
+                  updateSearch({ skip: Math.max(0, skip - PAGE_SIZE) })
+                }
               >
                 Previous
               </Button>

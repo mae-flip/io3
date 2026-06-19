@@ -6,7 +6,9 @@ test.use({ storageState: { cookies: [], origins: [] } })
 
 test("Age gate is shown before site content", async ({ page }) => {
   await page.goto("/")
-  await expect(page.getByRole("heading", { name: "18+ content warning" })).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: "18+ content warning" }),
+  ).toBeVisible()
   await expect(
     page.getByRole("heading", { name: "Welcome to Our Index" }),
   ).not.toBeVisible()
@@ -17,7 +19,9 @@ test("Home page is accessible after accepting age gate", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Welcome to Our Index" }),
   ).toBeVisible()
-  await expect(page.getByRole("heading", { name: "Weekly Features" })).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: "Weekly Features" }),
+  ).toBeVisible()
   await expect(page.getByRole("heading", { name: "Full Index" })).toBeVisible()
 })
 
@@ -66,7 +70,9 @@ test("Age gate is remembered after acceptance", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Welcome to Our Index" }),
   ).toBeVisible()
-  await expect(page.getByRole("heading", { name: "18+ content warning" })).not.toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: "18+ content warning" }),
+  ).not.toBeVisible()
 })
 
 test("Submit nav link reaches submit page", async ({ page }) => {

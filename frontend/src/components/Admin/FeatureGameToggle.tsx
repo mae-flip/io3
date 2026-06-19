@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
-import { AdminService, type AdminGamePublic } from "@/client"
+import { type AdminGamePublic, AdminService } from "@/client"
 import { Checkbox } from "@/components/ui/checkbox"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
@@ -33,7 +33,9 @@ const FeatureGameToggle = ({ game }: FeatureGameToggleProps) => {
       disabled={!canFeature || mutation.isPending}
       onCheckedChange={() => mutation.mutate()}
       aria-label={
-        isFeatured ? `Remove ${game.title ?? "game"} from features` : "Feature game"
+        isFeatured
+          ? `Remove ${game.title ?? "game"} from features`
+          : "Feature game"
       }
     />
   )

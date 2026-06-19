@@ -41,8 +41,8 @@ export function AgeGate({ children }: AgeGateProps) {
               imagery and content.
             </p>
             <p className="font-sans text-sm leading-relaxed text-dark-grey">
-              By entering, you confirm that you are at least 18 years old (or the
-              age of majority in your jurisdiction).
+              By entering, you confirm that you are at least 18 years old (or
+              the age of majority in your jurisdiction).
             </p>
           </div>
 

@@ -8,6 +8,7 @@ const statusLabels: Record<string, string> = {
   not_owned: "Not owned",
   still_listed: "Listed on itch.io",
   not_public: "Not public",
+  removed_by_moderator: "Removed by io3 moderator",
   error: "Error",
 }
 
@@ -17,6 +18,7 @@ const statusColors: Record<string, string> = {
   not_owned: "bg-orange/20 text-orange",
   still_listed: "bg-orange/20 text-orange",
   not_public: "bg-orange/20 text-orange",
+  removed_by_moderator: "bg-pink/20 text-pink",
   error: "bg-pink/20 text-pink",
 }
 

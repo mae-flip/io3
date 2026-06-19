@@ -78,8 +78,14 @@ class UserPublic(SQLModel):
     display_name: str | None = None
     is_owner: bool = False
     is_moderator: bool = False
+    has_contact_email: bool = False
+    contact_email: str | None = None
     created_at: datetime | None = None
     profile_links: list["UserProfileLink"] = Field(default_factory=list)
+
+
+class UserContactEmailUpdate(SQLModel):
+    email: EmailStr = Field(max_length=255)
 
 
 class UserProfileLink(SQLModel):
@@ -217,6 +223,7 @@ class Game(SQLModel, table=True):
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     rejection_reason: str | None = Field(default=None, max_length=1000)
+    removal_reason: str | None = Field(default=None, max_length=1000)
     duplicate_title_warning: bool = False
     kudos_count: int = 0
     featured_at: datetime | None = Field(
@@ -249,6 +256,7 @@ class SubmitBatchItemStatus(str, enum.Enum):
     not_owned = "not_owned"
     still_listed = "still_listed"
     not_public = "not_public"
+    removed_by_moderator = "removed_by_moderator"
     error = "error"
 
 
@@ -280,6 +288,8 @@ class ItchGamePublic(SQLModel):
     classification: str = "game"
     normalized_url: str | None = None
     already_indexed: bool = False
+    removed_by_moderator: bool = False
+    removal_reason: str | None = None
     itch_search_listed: bool = False
     publicly_viewable: bool = True
 
@@ -341,7 +351,9 @@ class AdminGamePublic(SQLModel):
     title: str | None = None
     status: GameStatus
     featured_at: datetime | None = None
+    removal_reason: str | None = None
     created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 class AdminGamesPublic(SQLModel):
@@ -351,6 +363,10 @@ class AdminGamesPublic(SQLModel):
 
 class GameReject(SQLModel):
     rejection_reason: str = Field(min_length=1, max_length=1000)
+
+
+class GameRemove(SQLModel):
+    removal_reason: str = Field(min_length=1, max_length=1000)
 
 
 class ItchTagPreview(SQLModel):

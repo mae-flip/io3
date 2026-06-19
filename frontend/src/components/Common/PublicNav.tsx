@@ -3,8 +3,8 @@ import { ChevronDown } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import { PixelIcon } from "@/components/Common/PixelIcon"
-import { ItchLoginButton } from "@/components/Submit/ItchLoginButton"
 import { Input } from "@/components/retroui/Input"
+import { ItchLoginButton } from "@/components/Submit/ItchLoginButton"
 import {
   DropdownMenu,
   DropdownMenuContent,

@@ -26,7 +26,8 @@ export function useItchSubmit() {
 
   const itchAccessToken = sessionStorage.getItem(ITCH_ACCESS_TOKEN_KEY)
   const hasIo3Token = Boolean(localStorage.getItem("access_token"))
-  const isSubmitSessionReady = hasIo3Token && Boolean(itchAccessToken) && games.length > 0
+  const isSubmitSessionReady =
+    hasIo3Token && Boolean(itchAccessToken) && games.length > 0
 
   const setSession = useCallback(
     (data: {
@@ -61,7 +62,8 @@ export function useItchSubmit() {
   }, [])
 
   const consumeOAuthReturnTo = useCallback(() => {
-    const returnTo = sessionStorage.getItem(ITCH_OAUTH_RETURN_TO_KEY) ?? "/submit"
+    const returnTo =
+      sessionStorage.getItem(ITCH_OAUTH_RETURN_TO_KEY) ?? "/submit"
     sessionStorage.removeItem(ITCH_OAUTH_RETURN_TO_KEY)
     return returnTo
   }, [])
@@ -82,7 +84,8 @@ export function useItchSubmit() {
         (game) =>
           game.published !== false &&
           game.publicly_viewable !== false &&
-          !game.already_indexed,
+          !game.already_indexed &&
+          !game.removed_by_moderator,
       ),
     [games],
   )

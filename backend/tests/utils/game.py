@@ -2,14 +2,16 @@ from datetime import datetime, timezone
 
 from sqlmodel import Session
 
-from app.models import Game, GameItchCache, GameStatus
+from app.models import Game, GameItchCache, GameStatus, User
 from app.services.slug import unique_game_slug_from_url
 from tests.utils.user import create_random_user
 from tests.utils.utils import random_lower_string
 
 
-def create_random_game(db: Session, *, approved: bool = False) -> Game:
-    user = create_random_user(db)
+def create_random_game(
+    db: Session, *, approved: bool = False, submitter: User | None = None
+) -> Game:
+    user = submitter or create_random_user(db)
     path = random_lower_string()
     itch_url = f"https://example.itch.io/{path}"
     title = random_lower_string()

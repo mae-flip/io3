@@ -1,12 +1,12 @@
 import type { GamePublic } from "@/client"
-import { Card } from "@/components/retroui/Card"
-import { KudosButton } from "@/components/Home/KudosButton"
 import { GamePriceLabel } from "@/components/Home/GamePriceLabel"
 import { GameTagChip } from "@/components/Home/GameTagChip"
+import { KudosButton } from "@/components/Home/KudosButton"
 import { PlatformChip } from "@/components/Home/PlatformChip"
 import { AuthorProfileLinks } from "@/components/Profile/AuthorProfileLinks"
-import { getPrimaryLink } from "@/lib/gameLinks"
+import { Card } from "@/components/retroui/Card"
 import { profileLinksForDisplayedAuthor } from "@/lib/authorProfileLinks"
+import { getPrimaryLink } from "@/lib/gameLinks"
 import { orderFeaturedTags } from "@/lib/gameTags"
 import { orderPlatforms } from "@/lib/platformTags"
 import { cn } from "@/lib/utils"
@@ -21,7 +21,12 @@ export function FeaturedGameCard({ game, className }: FeaturedGameCardProps) {
   const hoverText = game.summary?.trim()
 
   return (
-    <Card className={cn("group flex flex-col overflow-hidden bg-white retro-shadow-sm", className)}>
+    <Card
+      className={cn(
+        "group flex flex-col overflow-hidden bg-white retro-shadow-sm",
+        className,
+      )}
+    >
       <div className="border-b-2 border-black p-3">
         <h3 className="font-head-sm text-base leading-tight">{game.title}</h3>
       </div>
@@ -55,7 +60,7 @@ export function FeaturedGameCard({ game, className }: FeaturedGameCardProps) {
 
       <div className="flex flex-1 flex-col gap-3 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs md:text-sm">
-            <span className="font-sans">
+          <span className="font-sans">
             Author:{" "}
             <AuthorProfileLinks
               name={game.author_name ?? "Unknown"}

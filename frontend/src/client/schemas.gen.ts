@@ -37,6 +37,17 @@ export const AdminGamePublicSchema = {
             ],
             title: 'Featured At'
         },
+        removal_reason: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Removal Reason'
+        },
         created_at: {
             anyOf: [
                 {
@@ -48,6 +59,18 @@ export const AdminGamePublicSchema = {
                 }
             ],
             title: 'Created At'
+        },
+        updated_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Updated At'
         }
     },
     type: 'object',
@@ -392,6 +415,20 @@ export const GameRejectSchema = {
     title: 'GameReject'
 } as const;
 
+export const GameRemoveSchema = {
+    properties: {
+        removal_reason: {
+            type: 'string',
+            maxLength: 1000,
+            minLength: 1,
+            title: 'Removal Reason'
+        }
+    },
+    type: 'object',
+    required: ['removal_reason'],
+    title: 'GameRemove'
+} as const;
+
 export const GameSortSchema = {
     type: 'string',
     enum: ['latest', 'title', 'author', 'kudos'],
@@ -608,6 +645,22 @@ export const ItchGamePublicSchema = {
             type: 'boolean',
             title: 'Already Indexed',
             default: false
+        },
+        removed_by_moderator: {
+            type: 'boolean',
+            title: 'Removed By Moderator',
+            default: false
+        },
+        removal_reason: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Removal Reason'
         },
         itch_search_listed: {
             type: 'boolean',
@@ -891,7 +944,7 @@ export const PlatformPublicSchema = {
 
 export const SubmitBatchItemStatusSchema = {
     type: 'string',
-    enum: ['submitted', 'duplicate', 'not_owned', 'still_listed', 'not_public', 'error'],
+    enum: ['submitted', 'duplicate', 'not_owned', 'still_listed', 'not_public', 'removed_by_moderator', 'error'],
     title: 'SubmitBatchItemStatus'
 } as const;
 
@@ -1010,6 +1063,20 @@ export const TagsPublicSchema = {
     title: 'TagsPublic'
 } as const;
 
+export const UserContactEmailUpdateSchema = {
+    properties: {
+        email: {
+            type: 'string',
+            maxLength: 255,
+            format: 'email',
+            title: 'Email'
+        }
+    },
+    type: 'object',
+    required: ['email'],
+    title: 'UserContactEmailUpdate'
+} as const;
+
 export const UserProfileLinkSchema = {
     properties: {
         url: {
@@ -1096,6 +1163,22 @@ export const UserPublicSchema = {
             type: 'boolean',
             title: 'Is Moderator',
             default: false
+        },
+        has_contact_email: {
+            type: 'boolean',
+            title: 'Has Contact Email',
+            default: false
+        },
+        contact_email: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Contact Email'
         },
         created_at: {
             anyOf: [

@@ -9,12 +9,13 @@ from app.api.deps import OptionalKudosVisitor, SessionDep
 from app.core import security
 from app.core.config import settings
 from app.models import (
+    GameStatus,
     ItchAuthCallback,
     ItchAuthResponse,
     ItchAuthorizeResponse,
     ItchGamePublic,
-    UserPublic,
 )
+from app.services.user_profile import user_to_public
 from app.services.itch_api import (
     ItchApiError,
     build_itch_authorize_url,
@@ -49,10 +50,18 @@ async def _itch_games_public(
     for game in filtered:
         normalized = normalize_itch_game_url(game.url)
         already_indexed = False
+        removed_by_moderator = False
+        removal_reason: str | None = None
         if normalized:
-            already_indexed = crud.find_game_by_itch_url(
+            existing = crud.find_game_by_itch_url(
                 session=session, normalized_url=normalized
-            ) is not None
+            )
+            if existing:
+                if existing.status == GameStatus.archived:
+                    removed_by_moderator = True
+                    removal_reason = existing.removal_reason
+                else:
+                    already_indexed = True
         itch_search_listed = bool(normalized and listing_status.get(normalized, False))
         publicly_viewable = bool(normalized and viewability_status.get(normalized, False))
         public_games.append(
@@ -66,6 +75,8 @@ async def _itch_games_public(
                 classification=game.classification,
                 normalized_url=normalized,
                 already_indexed=already_indexed,
+                removed_by_moderator=removed_by_moderator,
+                removal_reason=removal_reason,
                 itch_search_listed=itch_search_listed,
                 publicly_viewable=publicly_viewable,
             )
@@ -122,7 +133,7 @@ async def itch_callback(
     )
 
     games = await _itch_games_public(session, itch_games)
-    user_public = UserPublic.model_validate(user)
+    user_public = user_to_public(user)
 
     return ItchAuthResponse(
         access_token=io3_token,

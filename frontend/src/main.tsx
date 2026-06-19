@@ -8,9 +8,9 @@ import { createRouter, RouterProvider } from "@tanstack/react-router"
 import { StrictMode } from "react"
 import ReactDOM from "react-dom/client"
 import { ApiError, OpenAPI } from "./client"
-import { getKudosVisitorId } from "./lib/kudosVisitor"
 import { ThemeProvider } from "./components/theme-provider"
 import { Toaster } from "./components/ui/sonner"
+import { getKudosVisitorId } from "./lib/kudosVisitor"
 import "./index.css"
 import { routeTree } from "./routeTree.gen"
 
@@ -23,7 +23,10 @@ OpenAPI.HEADERS = async () => ({
 })
 
 const handleApiError = (error: Error) => {
-  if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+  if (
+    error instanceof ApiError &&
+    (error.status === 401 || error.status === 403)
+  ) {
     localStorage.removeItem("access_token")
     sessionStorage.removeItem("itch_access_token")
     sessionStorage.removeItem("itch_games")
