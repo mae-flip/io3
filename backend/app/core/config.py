@@ -104,6 +104,7 @@ class Settings(BaseSettings):
     ITCH_OWNER_USERNAME: str = "MaeFlip"
     ITCH_CACHE_TTL_SECONDS: int = 3600
     ITCH_FETCH_CONCURRENCY: int = 5
+    ITCH_REFRESH_ON_DEPLOY: bool = False
     ITCH_OAUTH_CLIENT_ID: str = ""
     ITCH_OAUTH_REDIRECT_URI: str = ""
 

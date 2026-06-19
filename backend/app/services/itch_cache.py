@@ -153,9 +153,12 @@ async def _refresh_games_async(games: list[Game]) -> list[tuple[Game, ItchMetada
     return await asyncio.gather(*[fetch_one(game) for game in games])
 
 
-def ensure_fresh_many(session: Session, games: list[Game]) -> None:
+def ensure_fresh_many(session: Session, games: list[Game], *, force: bool = False) -> None:
     stale_games: list[Game] = []
     for game in games:
+        if force:
+            stale_games.append(game)
+            continue
         cache = get_cache(session, game.id)
         if _is_stale(cache):
             stale_games.append(game)
@@ -207,6 +210,6 @@ def refresh_all_stale(session: Session, *, force: bool = False) -> int:
     if not stale:
         return 0
 
-    ensure_fresh_many(session, stale)
+    ensure_fresh_many(session, stale, force=force)
     session.commit()
     return len(stale)

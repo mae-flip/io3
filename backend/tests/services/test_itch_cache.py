@@ -10,6 +10,7 @@ from app.services.itch_cache import (
     _is_stale,
     ensure_fresh,
     get_cache,
+    refresh_all_stale,
     upsert_from_metadata,
 )
 from tests.utils.game import create_random_game
@@ -93,3 +94,34 @@ def test_ensure_fresh_fetches_when_stale(db: Session) -> None:
         result = ensure_fresh(db, game)
     assert result is not None
     assert get_cache(db, game.id) is not None
+
+
+def test_refresh_all_stale_force_refreshes_fresh_entries(db: Session) -> None:
+    game = create_random_game(db, approved=True)
+    cache = db.get(GameItchCache, game.id)
+    assert cache is not None
+    assert _is_stale(cache) is False
+
+    metadata = ItchMetadata(
+        normalized_url=game.itch_url,
+        title="Deploy Refresh",
+        price_cents=499,
+        price_currency="USD",
+    )
+
+    async def mock_refresh(games: list[Game]) -> list:
+        return [(games[0], metadata, None)]
+
+    with patch(
+        "app.services.itch_cache._refresh_games_async",
+        side_effect=mock_refresh,
+    ):
+        count = refresh_all_stale(db, force=True)
+
+    db.expire_all()
+    assert count == 1
+    refreshed = db.get(GameItchCache, game.id)
+    assert refreshed is not None
+    assert refreshed.title == "Deploy Refresh"
+    assert refreshed.price_cents == 499
+    assert refreshed.price_currency == "USD"
