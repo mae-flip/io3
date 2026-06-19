@@ -1,9 +1,11 @@
 import type { GamePublic } from "@/client"
 import { Card } from "@/components/retroui/Card"
 import { KudosButton } from "@/components/Home/KudosButton"
+import { GamePriceLabel } from "@/components/Home/GamePriceLabel"
 import { GameTagChip } from "@/components/Home/GameTagChip"
 import { PlatformChip } from "@/components/Home/PlatformChip"
 import { getPrimaryLink } from "@/lib/gameLinks"
+import { formatGamePrice } from "@/lib/gamePrice"
 import { orderDisplayTags } from "@/lib/gameTags"
 import { orderPlatforms } from "@/lib/platformTags"
 import { cn } from "@/lib/utils"
@@ -79,10 +81,12 @@ export function CompactGameCard({ game, className }: CompactGameCardProps) {
     </div>
   )
 
+  const priceLabel = formatGamePrice(game.price_cents, game.price_currency)
+
   return (
     <Card
       className={cn(
-        "group overflow-hidden bg-white retro-shadow-sm",
+        "group flex h-full flex-col overflow-hidden bg-white retro-shadow-sm",
         className,
       )}
     >
@@ -100,22 +104,27 @@ export function CompactGameCard({ game, className }: CompactGameCardProps) {
         thumbnail
       )}
 
-      <div className="flex items-start justify-between gap-2 border-t-2 border-black p-2">
-        <div className="flex min-w-0 flex-col gap-1">
-          {platforms.length > 0 ? (
-            <div className="flex flex-wrap gap-1">
-              {platforms.map((platform) => (
-                <PlatformChip key={platform.platform} platform={platform} size="xs" />
-              ))}
-            </div>
-          ) : null}
+      <div className="flex min-h-0 flex-1 flex-col gap-1 border-t-2 border-black p-2">
+        <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 flex-wrap gap-1">
+            {platforms.map((platform) => (
+              <PlatformChip key={platform.platform} platform={platform} size="xs" />
+            ))}
+          </div>
+          <KudosButton game={game} size="xs" showLabel={false} />
+        </div>
+
+        {tags.length > 0 ? (
+          <div className="flex w-full flex-wrap gap-1">
             {tags.map((tag) => (
               <GameTagChip key={tag.id} tag={tag} size="xs" />
             ))}
           </div>
-        </div>
-        <KudosButton game={game} size="xs" />
+        ) : null}
+
+        {priceLabel ? (
+          <GamePriceLabel game={game} size="xs" className="mt-auto self-end" />
+        ) : null}
       </div>
     </Card>
   )

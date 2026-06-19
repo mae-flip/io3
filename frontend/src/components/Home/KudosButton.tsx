@@ -2,15 +2,26 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { FaHeart, FaRegHeart } from "react-icons/fa6"
 
 import { ApiError, GamesService, type GamePublic } from "@/client"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
 interface KudosButtonProps {
   game: GamePublic
   size?: "xs" | "sm"
+  showLabel?: boolean
   className?: string
 }
 
-export function KudosButton({ game, size = "sm", className }: KudosButtonProps) {
+export function KudosButton({
+  game,
+  size = "sm",
+  showLabel = true,
+  className,
+}: KudosButtonProps) {
   const queryClient = useQueryClient()
   const hasKudos = Boolean(game.has_kudos)
 
@@ -23,9 +34,9 @@ export function KudosButton({ game, size = "sm", className }: KudosButtonProps) 
 
   const kudosGiven = hasKudos || mutation.isSuccess
   const HeartIcon = kudosGiven ? FaHeart : FaRegHeart
-  const showAddLabel = !kudosGiven
+  const tooltipText = kudosGiven ? "You left kudos" : "+ add kudos"
 
-  return (
+  const button = (
     <button
       type="button"
       disabled={hasKudos || mutation.isPending}
@@ -41,9 +52,9 @@ export function KudosButton({ game, size = "sm", className }: KudosButtonProps) 
         className,
       )}
       aria-label={kudosGiven ? "Kudos given" : "Leave kudos"}
-      title={kudosGiven ? "You left kudos" : "Leave kudos"}
+      title={showLabel ? (kudosGiven ? "You left kudos" : "Leave kudos") : undefined}
     >
-      {showAddLabel ? <span>+ add kudos</span> : null}
+      {showLabel && !kudosGiven ? <span>+ add kudos</span> : null}
       <HeartIcon
         className={cn(
           "shrink-0",
@@ -58,4 +69,15 @@ export function KudosButton({ game, size = "sm", className }: KudosButtonProps) 
       )}
     </button>
   )
+
+  if (!showLabel) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipContent side="bottom">{tooltipText}</TooltipContent>
+      </Tooltip>
+    )
+  }
+
+  return button
 }

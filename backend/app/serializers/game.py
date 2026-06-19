@@ -53,6 +53,8 @@ def game_to_public(
         links=[_synthetic_link(game)],
         tags=tag_data,
         platforms=platform_data,
+        price_cents=cache.price_cents if cache else None,
+        price_currency=cache.price_currency if cache else None,
     )
 
 

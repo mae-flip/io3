@@ -23,6 +23,7 @@ from app.services.itch_api import (
     normalize_itch_game_url,
 )
 from app.services.itch_oauth_state import create_oauth_state, verify_oauth_state
+from app.services.itch_public import public_viewability_for_games
 from app.services.itch_search import listing_status_for_games
 
 router = APIRouter(prefix="/auth/itch", tags=["itch-auth"])
@@ -40,9 +41,9 @@ async def _itch_games_public(
     session: Session, games: list
 ) -> list[ItchGamePublic]:
     filtered = [game for game in games if game.classification == "game"]
-    listing_status = await listing_status_for_games(
-        [(game.url, game.title) for game in filtered]
-    )
+    game_refs = [(game.url, game.title) for game in filtered]
+    listing_status = await listing_status_for_games(game_refs)
+    viewability_status = await public_viewability_for_games(game_refs)
 
     public_games: list[ItchGamePublic] = []
     for game in filtered:
@@ -53,6 +54,7 @@ async def _itch_games_public(
                 session=session, normalized_url=normalized
             ) is not None
         itch_search_listed = bool(normalized and listing_status.get(normalized, False))
+        publicly_viewable = bool(normalized and viewability_status.get(normalized, False))
         public_games.append(
             ItchGamePublic(
                 id=game.id,
@@ -65,6 +67,7 @@ async def _itch_games_public(
                 normalized_url=normalized,
                 already_indexed=already_indexed,
                 itch_search_listed=itch_search_listed,
+                publicly_viewable=publicly_viewable,
             )
         )
     return public_games

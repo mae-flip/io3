@@ -76,6 +76,11 @@ def test_itch_callback_creates_shadow_user(client: TestClient, db: Session) -> N
             new_callable=AsyncMock,
             return_value={"https://queerdev.itch.io/my-game": False},
         ),
+        patch(
+            "app.api.routes.itch_auth.public_viewability_for_games",
+            new_callable=AsyncMock,
+            return_value={"https://queerdev.itch.io/my-game": True},
+        ),
     ):
         response = client.post(
             f"{settings.API_V1_STR}/auth/itch/callback",
@@ -124,6 +129,11 @@ def test_itch_callback_sets_owner_for_configured_username(
         ),
         patch(
             "app.api.routes.itch_auth.listing_status_for_games",
+            new_callable=AsyncMock,
+            return_value={},
+        ),
+        patch(
+            "app.api.routes.itch_auth.public_viewability_for_games",
             new_callable=AsyncMock,
             return_value={},
         ),
@@ -180,6 +190,11 @@ def test_itch_callback_claims_anonymous_kudos(
         ),
         patch(
             "app.api.routes.itch_auth.listing_status_for_games",
+            new_callable=AsyncMock,
+            return_value={},
+        ),
+        patch(
+            "app.api.routes.itch_auth.public_viewability_for_games",
             new_callable=AsyncMock,
             return_value={},
         ),

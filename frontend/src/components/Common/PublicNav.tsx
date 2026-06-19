@@ -49,6 +49,9 @@ function NavAuth({ className }: { className?: string }) {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild>
+              <Link to="/profile">Edit profile</Link>
+            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
                 logout()
@@ -74,7 +77,11 @@ function NavAuth({ className }: { className?: string }) {
   )
 }
 
-export function PublicNav() {
+interface PublicNavProps {
+  showSearch?: boolean
+}
+
+export function PublicNav({ showSearch = true }: PublicNavProps) {
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -104,7 +111,11 @@ export function PublicNav() {
             <NavAuth className="md:hidden" />
           </div>
 
-          <SearchBar className="min-w-0 flex-1" />
+          {showSearch ? (
+            <SearchBar className="min-w-0 flex-1" />
+          ) : (
+            <div className="hidden min-w-0 flex-1 md:block" aria-hidden />
+          )}
 
           <div
             className={cn(

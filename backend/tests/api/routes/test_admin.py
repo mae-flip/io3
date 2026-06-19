@@ -83,9 +83,15 @@ def test_create_admin_game(client: TestClient, moderator_token_headers: dict[str
         title="Admin Added Game",
         summary="Short summary",
     )
-    with patch(
-        "app.crud.fetch_itch_metadata_sync",
-        return_value=metadata,
+    with (
+        patch(
+            "app.crud.fetch_itch_metadata_sync",
+            return_value=metadata,
+        ),
+        patch(
+            "app.crud.check_public_viewability_sync",
+            return_value=True,
+        ),
     ):
         response = client.post(
             f"{settings.API_V1_STR}/admin/games",

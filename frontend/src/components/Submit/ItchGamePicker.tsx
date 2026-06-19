@@ -1,20 +1,37 @@
 import { useMutation } from "@tanstack/react-query"
+import { CircleHelp } from "lucide-react"
 import { useState } from "react"
 
 import { ApiError, GamesService, type SubmitBatchResponse } from "@/client"
 import { Button } from "@/components/retroui/Button"
 import { Card } from "@/components/retroui/Card"
 import { SubmitResults } from "@/components/Submit/SubmitResults"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { useItchSubmit } from "@/hooks/useItchSubmit"
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
 
+const NOT_PUBLIC_HELP =
+  "io3 only indexes games anyone can view without a download key or password. Restricted itch.io games and password-protected pages cannot be submitted."
+
+type GameRowStatus = {
+  label: string
+  className: string
+  disabled: boolean
+  helpText?: string
+}
+
 function gameRowStatus(game: {
   published?: boolean
   already_indexed?: boolean
   itch_search_listed?: boolean
-}): { label: string; className: string; disabled: boolean } {
+  publicly_viewable?: boolean
+}): GameRowStatus {
   if (game.already_indexed) {
     return {
       label: "Already indexed on io3!",
@@ -36,11 +53,62 @@ function gameRowStatus(game: {
       disabled: true,
     }
   }
+  if (game.publicly_viewable === false) {
+    return {
+      label: "NOT PUBLIC",
+      className: "bg-orange/20",
+      disabled: true,
+      helpText: NOT_PUBLIC_HELP,
+    }
+  }
   return {
     label: "Delisted",
     className: "bg-green-100",
     disabled: false,
   }
+}
+
+function isSelectableGame(game: {
+  published?: boolean
+  already_indexed?: boolean
+  itch_search_listed?: boolean
+  publicly_viewable?: boolean
+}) {
+  return (
+    game.published !== false &&
+    game.publicly_viewable !== false &&
+    !game.already_indexed &&
+    !game.itch_search_listed
+  )
+}
+
+function StatusBadge({ status }: { status: GameRowStatus }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 border border-black px-2 py-0.5 text-xs uppercase",
+        status.className,
+      )}
+    >
+      {status.label}
+      {status.helpText && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className="inline-flex text-current"
+              aria-label="Why can't I submit this game?"
+            >
+              <CircleHelp className="size-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-xs">
+            {status.helpText}
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </span>
+  )
 }
 
 export function ItchGamePicker() {
@@ -94,12 +162,7 @@ export function ItchGamePicker() {
     mutation.mutate(urls)
   }
 
-  const selectableCount = games.filter(
-    (game) =>
-      game.published !== false &&
-      !game.already_indexed &&
-      !game.itch_search_listed,
-  ).length
+  const selectableCount = games.filter(isSelectableGame).length
 
   return (
     <div className="flex flex-col gap-6">
@@ -109,7 +172,7 @@ export function ItchGamePicker() {
           <p className="mt-1 text-sm text-dark-grey">
             Logged in as{" "}
             <span className="font-medium text-black">{itchUsername}</span>
-            . Only de-listed games (not found in itch search) can be submitted.
+            . Only de-listed, publicly viewable games can be submitted.
           </p>
         </div>
         <Button type="button" variant="ghost" size="sm" onClick={clearSession}>
@@ -198,14 +261,7 @@ export function ItchGamePicker() {
                         </a>
                       </td>
                       <td className="px-3 py-3">
-                        <span
-                          className={cn(
-                            "border border-black px-2 py-0.5 text-xs uppercase",
-                            status.className,
-                          )}
-                        >
-                          {status.label}
-                        </span>
+                        <StatusBadge status={status} />
                       </td>
                     </tr>
                   )

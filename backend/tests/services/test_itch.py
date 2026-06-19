@@ -26,6 +26,17 @@ HAWK_HTML_SNIPPET = """
 </td></tr>
 </tbody></table>
 <a href="https://maeflip.itch.io" class="action_btn view_more">View all</a>
+<div class="breadcrumbs"><a href="https://itch.io/games">Games</a> › <a href="https://itch.io/games/genre-action">Action</a> › <a href="https://itch.io/games/free">Free</a></div>
+<script type="text/javascript">init_ViewHtmlGame('#view_html_game_4466592', {"game":{"actual_price":0,"min_price":0}});</script>
+</body></html>
+"""
+
+PAID_GAME_HTML_SNIPPET = """
+<html><head>
+<title>A Short Hike by adamgryu</title>
+<script type="application/ld+json">{"offers":{"priceCurrency":"USD","price":"7.99","@type":"Offer"},"@type":"Product","name":"A Short Hike"}</script>
+</head><body>
+<script type="text/javascript">init_ViewGame('#view_game_2995069', {"game":{"actual_price":799,"min_price":799}});</script>
 </body></html>
 """
 
@@ -52,6 +63,17 @@ def test_parse_itch_author_from_page_title() -> None:
         ("lgbt", False),
         ("nsfw", False),
     ]
+    assert metadata.price_cents == 0
+    assert metadata.price_currency == "USD"
+
+
+def test_parse_itch_price_from_paid_game() -> None:
+    metadata = parse_itch_metadata_from_html(
+        PAID_GAME_HTML_SNIPPET,
+        url="https://adamgryu.itch.io/a-short-hike",
+    )
+    assert metadata.price_cents == 799
+    assert metadata.price_currency == "USD"
 
 
 def test_parse_itch_author_from_subdomain_fallback() -> None:

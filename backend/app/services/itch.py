@@ -29,6 +29,8 @@ class ItchMetadata:
     tags: list[ItchTag] = field(default_factory=list)
     platforms: list[OsPlatform] = field(default_factory=list)
     normalized_url: str | None = None
+    price_cents: int | None = None
+    price_currency: str | None = None
 
 
 def itch_tag_slug_from_url(url: str) -> str:
@@ -137,6 +139,29 @@ def _extract_itch_platforms(content: str) -> list[OsPlatform]:
     return platforms
 
 
+def _extract_itch_price(content: str) -> tuple[int | None, str | None]:
+    match = re.search(r'"actual_price"\s*:\s*(\d+)', content)
+    if match:
+        currency_match = re.search(r'"priceCurrency"\s*:\s*"([A-Z]+)"', content)
+        currency = currency_match.group(1) if currency_match else "USD"
+        return int(match.group(1)), currency
+
+    match = re.search(
+        r'"offers"\s*:\s*\{[^}]*"price"\s*:\s*"([0-9.]+)"',
+        content,
+    )
+    if match:
+        cents = round(float(match.group(1)) * 100)
+        currency_match = re.search(r'"priceCurrency"\s*:\s*"([A-Z]+)"', content)
+        currency = currency_match.group(1) if currency_match else "USD"
+        return cents, currency
+
+    if re.search(r'href="https://itch\.io/games/free"', content):
+        return 0, "USD"
+
+    return None, None
+
+
 def _extract_itch_tags(content: str) -> list[ItchTag]:
     tags: list[ItchTag] = []
     seen: set[str] = set()
@@ -187,6 +212,7 @@ def parse_itch_metadata_from_html(content: str, *, url: str) -> ItchMetadata:
         metadata.author_name = _author_name_from_subdomain(url)
     metadata.tags = _extract_itch_tags(content)
     metadata.platforms = _extract_itch_platforms(content)
+    metadata.price_cents, metadata.price_currency = _extract_itch_price(content)
 
     return metadata
 

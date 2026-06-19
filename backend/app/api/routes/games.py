@@ -31,6 +31,7 @@ from app.models import (
 from app.serializers.game import game_to_public_from_session, games_public
 from app.services.itch import fetch_itch_metadata
 from app.services.itch_api import ItchApiError, fetch_itch_games, owned_game_urls
+from app.services.itch_public import NOT_PUBLIC_DETAIL, is_publicly_viewable
 from app.services.itch_search import is_listed_in_itch_search
 from app.services.urls import normalize_itch_url
 
@@ -180,6 +181,17 @@ async def submit_games_batch(
                     url=raw_url,
                     status=SubmitBatchItemStatus.still_listed,
                     detail="Game still appears in itch.io search and cannot be indexed here",
+                )
+            )
+            continue
+
+        if not await is_publicly_viewable(raw_url):
+            skipped_count += 1
+            results.append(
+                SubmitBatchResultItem(
+                    url=raw_url,
+                    status=SubmitBatchItemStatus.not_public,
+                    detail=NOT_PUBLIC_DETAIL,
                 )
             )
             continue

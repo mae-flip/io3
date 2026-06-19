@@ -35,6 +35,7 @@ from app.services.itch_cache import (
     upsert_from_metadata,
 )
 from app.services.itch import fetch_itch_metadata_sync
+from app.services.itch_public import NOT_PUBLIC_DETAIL, check_public_viewability_sync
 from app.services.platforms import PLATFORM_DISPLAY_ORDER, platform_label
 from app.services.slug import unique_game_slug_from_url
 from app.services.urls import normalize_itch_url
@@ -175,6 +176,9 @@ def create_game(
     if find_game_by_itch_url(session=session, normalized_url=normalized):
         raise ValueError(f"Duplicate URL already indexed: {game_in.url}")
 
+    if not check_public_viewability_sync(normalized):
+        raise ValueError(NOT_PUBLIC_DETAIL)
+
     metadata = fetch_itch_metadata_sync(normalized)
     slug = unique_game_slug_from_url(session, normalized)
     duplicate_warning = False
@@ -212,6 +216,9 @@ def create_admin_game(
 
     if find_game_by_itch_url(session=session, normalized_url=normalized):
         raise ValueError(f"Duplicate URL already indexed: {game_in.url}")
+
+    if not check_public_viewability_sync(normalized):
+        raise ValueError(NOT_PUBLIC_DETAIL)
 
     metadata = fetch_itch_metadata_sync(normalized)
     slug = unique_game_slug_from_url(session, normalized)
@@ -318,6 +325,8 @@ def update_game(
         existing = find_game_by_itch_url(session=session, normalized_url=normalized)
         if existing and existing.id != db_game.id:
             raise ValueError(f"Duplicate URL already indexed: {game_in.url}")
+        if not check_public_viewability_sync(normalized):
+            raise ValueError(NOT_PUBLIC_DETAIL)
         metadata = fetch_itch_metadata_sync(normalized)
         db_game.itch_url = normalized
         upsert_from_metadata(session=session, game_id=db_game.id, metadata=metadata)

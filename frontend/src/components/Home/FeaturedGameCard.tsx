@@ -1,6 +1,7 @@
 import type { GamePublic } from "@/client"
 import { Card } from "@/components/retroui/Card"
 import { KudosButton } from "@/components/Home/KudosButton"
+import { GamePriceLabel } from "@/components/Home/GamePriceLabel"
 import { GameTagChip } from "@/components/Home/GameTagChip"
 import { PlatformChip } from "@/components/Home/PlatformChip"
 import { getPrimaryLink } from "@/lib/gameLinks"
@@ -84,10 +85,13 @@ export function FeaturedGameCard({ game, className }: FeaturedGameCardProps) {
           </div>
         ) : null}
 
-        <div className="mt-auto flex flex-wrap gap-1.5">
-          {orderFeaturedTags(game.tags ?? []).map((tag) => (
-            <GameTagChip key={tag.id} tag={tag} />
-          ))}
+        <div className="mt-auto flex items-end justify-between gap-2">
+          <div className="flex flex-wrap gap-1.5">
+            {orderFeaturedTags(game.tags ?? []).map((tag) => (
+              <GameTagChip key={tag.id} tag={tag} />
+            ))}
+          </div>
+          <GamePriceLabel game={game} />
         </div>
       </div>
     </Card>

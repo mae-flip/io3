@@ -35,8 +35,9 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     restart: "no"
-    # One-shot migration job; Coolify must not treat exit as a failure to restart.
-    exclude_from_hc: true
+    # One-shot migration job. restart: "no" also tells Coolify to exclude this
+    # service from stack health checks (exclude_from_hc is Coolify-only and
+    # breaks local `docker compose` validation).
     depends_on:
       db:
         condition: service_healthy

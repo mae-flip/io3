@@ -79,7 +79,10 @@ export function useItchSubmit() {
   const selectableGames = useMemo(
     () =>
       games.filter(
-        (game) => game.published !== false && !game.already_indexed,
+        (game) =>
+          game.published !== false &&
+          game.publicly_viewable !== false &&
+          !game.already_indexed,
       ),
     [games],
   )

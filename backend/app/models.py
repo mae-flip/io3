@@ -62,6 +62,10 @@ class User(SQLModel, table=True):
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
+    profile_links: list[dict[str, Any]] = Field(
+        default_factory=list,
+        sa_column=Column(JSONB, nullable=False, server_default="[]"),
+    )
     games: list["Game"] = Relationship(
         back_populates="submitter",
         sa_relationship_kwargs={"foreign_keys": "[Game.submitter_id]"},
@@ -75,6 +79,17 @@ class UserPublic(SQLModel):
     is_owner: bool = False
     is_moderator: bool = False
     created_at: datetime | None = None
+    profile_links: list["UserProfileLink"] = Field(default_factory=list)
+
+
+class UserProfileLink(SQLModel):
+    label: str = Field(min_length=1, max_length=64)
+    url: str = Field(min_length=1, max_length=2048)
+    managed_by_itch: bool = False
+
+
+class UserProfileLinksUpdate(SQLModel):
+    links: list[UserProfileLink] = Field(default_factory=list, max_length=7)
 
 
 class ModeratorUserPublic(SQLModel):
@@ -158,6 +173,8 @@ class GameItchCache(SQLModel, table=True):
         default_factory=list,
         sa_column=Column(JSONB, nullable=False, server_default="[]"),
     )
+    price_cents: int | None = Field(default=None)
+    price_currency: str | None = Field(default=None, max_length=3)
     fetched_at: datetime = Field(
         sa_type=DateTime(timezone=True),  # type: ignore
     )
@@ -228,6 +245,7 @@ class SubmitBatchItemStatus(str, enum.Enum):
     duplicate = "duplicate"
     not_owned = "not_owned"
     still_listed = "still_listed"
+    not_public = "not_public"
     error = "error"
 
 
@@ -260,6 +278,7 @@ class ItchGamePublic(SQLModel):
     normalized_url: str | None = None
     already_indexed: bool = False
     itch_search_listed: bool = False
+    publicly_viewable: bool = True
 
 
 class ItchAuthorizeResponse(SQLModel):
@@ -303,6 +322,8 @@ class GamePublic(SQLModel):
     links: list[GameLinkPublic] = []
     tags: list[TagPublic] = []
     platforms: list[PlatformPublic] = []
+    price_cents: int | None = None
+    price_currency: str | None = None
 
 
 class GamesPublic(SQLModel):

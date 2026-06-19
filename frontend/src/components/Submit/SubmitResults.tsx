@@ -7,6 +7,7 @@ const statusLabels: Record<string, string> = {
   duplicate: "Already indexed",
   not_owned: "Not owned",
   still_listed: "Listed on itch.io",
+  not_public: "Not public",
   error: "Error",
 }
 
@@ -15,6 +16,7 @@ const statusColors: Record<string, string> = {
   duplicate: "bg-light-grey text-dark-grey",
   not_owned: "bg-orange/20 text-orange",
   still_listed: "bg-orange/20 text-orange",
+  not_public: "bg-orange/20 text-orange",
   error: "bg-pink/20 text-pink",
 }
 

@@ -70,6 +70,8 @@ def upsert_from_metadata(
         "author_url": metadata.author_url,
         "tags": _tags_to_json(metadata.tags),
         "platforms": _platforms_to_json(metadata.platforms),
+        "price_cents": metadata.price_cents,
+        "price_currency": metadata.price_currency,
         "fetched_at": now,
         "fetch_error": fetch_error,
     }

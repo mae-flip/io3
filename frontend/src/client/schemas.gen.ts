@@ -342,6 +342,28 @@ export const GamePublicSchema = {
             type: 'array',
             title: 'Platforms',
             default: []
+        },
+        price_cents: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Price Cents'
+        },
+        price_currency: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Price Currency'
         }
     },
     type: 'object',
@@ -584,6 +606,11 @@ export const ItchGamePublicSchema = {
             type: 'boolean',
             title: 'Itch Search Listed',
             default: false
+        },
+        publicly_viewable: {
+            type: 'boolean',
+            title: 'Publicly Viewable',
+            default: true
         }
     },
     type: 'object',
@@ -857,7 +884,7 @@ export const PlatformPublicSchema = {
 
 export const SubmitBatchItemStatusSchema = {
     type: 'string',
-    enum: ['submitted', 'duplicate', 'not_owned', 'still_listed', 'error'],
+    enum: ['submitted', 'duplicate', 'not_owned', 'still_listed', 'not_public', 'error'],
     title: 'SubmitBatchItemStatus'
 } as const;
 
@@ -976,6 +1003,46 @@ export const TagsPublicSchema = {
     title: 'TagsPublic'
 } as const;
 
+export const UserProfileLinkSchema = {
+    properties: {
+        label: {
+            type: 'string',
+            maxLength: 64,
+            minLength: 1,
+            title: 'Label'
+        },
+        url: {
+            type: 'string',
+            maxLength: 2048,
+            minLength: 1,
+            title: 'Url'
+        },
+        managed_by_itch: {
+            type: 'boolean',
+            title: 'Managed By Itch',
+            default: false
+        }
+    },
+    type: 'object',
+    required: ['label', 'url'],
+    title: 'UserProfileLink'
+} as const;
+
+export const UserProfileLinksUpdateSchema = {
+    properties: {
+        links: {
+            items: {
+                '$ref': '#/components/schemas/UserProfileLink'
+            },
+            type: 'array',
+            maxItems: 7,
+            title: 'Links'
+        }
+    },
+    type: 'object',
+    title: 'UserProfileLinksUpdate'
+} as const;
+
 export const UserPublicSchema = {
     properties: {
         id: {
@@ -1026,6 +1093,13 @@ export const UserPublicSchema = {
                 }
             ],
             title: 'Created At'
+        },
+        profile_links: {
+            items: {
+                '$ref': '#/components/schemas/UserProfileLink'
+            },
+            type: 'array',
+            title: 'Profile Links'
         }
     },
     type: 'object',

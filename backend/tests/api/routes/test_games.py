@@ -50,9 +50,15 @@ def test_create_game(
         title="New Queer Game",
         summary="Short summary",
     )
-    with patch(
-        "app.crud.fetch_itch_metadata_sync",
-        return_value=metadata,
+    with (
+        patch(
+            "app.crud.fetch_itch_metadata_sync",
+            return_value=metadata,
+        ),
+        patch(
+            "app.crud.check_public_viewability_sync",
+            return_value=True,
+        ),
     ):
         response = client.post(
             f"{settings.API_V1_STR}/games/",
@@ -436,8 +442,17 @@ def test_submit_batch_owned_game(
             return_value=False,
         ),
         patch(
+            "app.api.routes.games.is_publicly_viewable",
+            new_callable=AsyncMock,
+            return_value=True,
+        ),
+        patch(
             "app.crud.fetch_itch_metadata_sync",
             return_value=metadata,
+        ),
+        patch(
+            "app.crud.check_public_viewability_sync",
+            return_value=True,
         ),
     ):
         response = client.post(
@@ -545,3 +560,46 @@ def test_submit_batch_still_listed(
     content = response.json()
     assert content["submitted_count"] == 0
     assert content["results"][0]["status"] == "still_listed"
+
+
+def test_submit_batch_not_public(
+    client: TestClient, normal_user_token_headers: dict[str, str]
+) -> None:
+    itch_games = [
+        ItchGameSummary(
+            id=4,
+            title="Restricted Game",
+            url="https://creator.itch.io/restricted-game",
+            published=True,
+            classification="game",
+        )
+    ]
+    with (
+        patch(
+            "app.api.routes.games.fetch_itch_games",
+            new_callable=AsyncMock,
+            return_value=itch_games,
+        ),
+        patch(
+            "app.api.routes.games.is_listed_in_itch_search",
+            new_callable=AsyncMock,
+            return_value=False,
+        ),
+        patch(
+            "app.api.routes.games.is_publicly_viewable",
+            new_callable=AsyncMock,
+            return_value=False,
+        ),
+    ):
+        response = client.post(
+            f"{settings.API_V1_STR}/games/submit-batch",
+            headers=normal_user_token_headers,
+            json={
+                "urls": ["https://creator.itch.io/restricted-game"],
+                "itch_access_token": "itch-token",
+            },
+        )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["submitted_count"] == 0
+    assert content["results"][0]["status"] == "not_public"

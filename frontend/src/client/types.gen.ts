@@ -55,6 +55,8 @@ export type GamePublic = {
     links?: Array<GameLinkPublic>;
     tags?: Array<TagPublic>;
     platforms?: Array<PlatformPublic>;
+    price_cents?: (number | null);
+    price_currency?: (string | null);
 };
 
 export type GameReject = {
@@ -112,6 +114,7 @@ export type ItchGamePublic = {
     normalized_url?: (string | null);
     already_indexed?: boolean;
     itch_search_listed?: boolean;
+    publicly_viewable?: boolean;
 };
 
 export type ItchMetadataPreview = {
@@ -171,7 +174,7 @@ export type PlatformPublic = {
     name: string;
 };
 
-export type SubmitBatchItemStatus = 'submitted' | 'duplicate' | 'not_owned' | 'still_listed' | 'error';
+export type SubmitBatchItemStatus = 'submitted' | 'duplicate' | 'not_owned' | 'still_listed' | 'not_public' | 'error';
 
 export type SubmitBatchResponse = {
     results: Array<SubmitBatchResultItem>;
@@ -199,6 +202,16 @@ export type TagsPublic = {
     count: number;
 };
 
+export type UserProfileLink = {
+    label: string;
+    url: string;
+    managed_by_itch?: boolean;
+};
+
+export type UserProfileLinksUpdate = {
+    links?: Array<UserProfileLink>;
+};
+
 export type UserPublic = {
     id: string;
     itch_username?: (string | null);
@@ -206,6 +219,7 @@ export type UserPublic = {
     is_owner?: boolean;
     is_moderator?: boolean;
     created_at?: (string | null);
+    profile_links?: Array<UserProfileLink>;
 };
 
 export type ValidationError = {
@@ -399,6 +413,12 @@ export type TagsReadGamesByTagData = {
 export type TagsReadGamesByTagResponse = (GamesPublic);
 
 export type UsersReadUserMeResponse = (UserPublic);
+
+export type UsersUpdateUserProfileLinksData = {
+    requestBody: UserProfileLinksUpdate;
+};
+
+export type UsersUpdateUserProfileLinksResponse = (UserPublic);
 
 export type UtilsTestEmailData = {
     emailTo: string;

@@ -13,6 +13,7 @@ import { Route as PublicRouteImport } from './routes/_public'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as PublicSubmitRouteImport } from './routes/_public/submit'
 import { Route as PublicAdminRouteImport } from './routes/_public/admin'
+import { Route as PublicProfileRouteImport } from './routes/_public/profile'
 import { Route as PublicSubmitCallbackRouteImport } from './routes/_public/submit.callback'
 
 const PublicRoute = PublicRouteImport.update({
@@ -34,6 +35,11 @@ const PublicAdminRoute = PublicAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => PublicRoute,
 } as any)
+const PublicProfileRoute = PublicProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => PublicRoute,
+} as any)
 const PublicSubmitCallbackRoute = PublicSubmitCallbackRouteImport.update({
   id: '/callback',
   path: '/callback',
@@ -43,11 +49,13 @@ const PublicSubmitCallbackRoute = PublicSubmitCallbackRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof PublicIndexRoute
   '/admin': typeof PublicAdminRoute
+  '/profile': typeof PublicProfileRoute
   '/submit': typeof PublicSubmitRouteWithChildren
   '/submit/callback': typeof PublicSubmitCallbackRoute
 }
 export interface FileRoutesByTo {
   '/admin': typeof PublicAdminRoute
+  '/profile': typeof PublicProfileRoute
   '/submit': typeof PublicSubmitRouteWithChildren
   '/': typeof PublicIndexRoute
   '/submit/callback': typeof PublicSubmitCallbackRoute
@@ -56,19 +64,21 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_public': typeof PublicRouteWithChildren
   '/_public/admin': typeof PublicAdminRoute
+  '/_public/profile': typeof PublicProfileRoute
   '/_public/submit': typeof PublicSubmitRouteWithChildren
   '/_public/': typeof PublicIndexRoute
   '/_public/submit/callback': typeof PublicSubmitCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/submit' | '/submit/callback'
+  fullPaths: '/' | '/admin' | '/profile' | '/submit' | '/submit/callback'
   fileRoutesByTo: FileRoutesByTo
-  to: '/admin' | '/submit' | '/' | '/submit/callback'
+  to: '/admin' | '/profile' | '/submit' | '/' | '/submit/callback'
   id:
     | '__root__'
     | '/_public'
     | '/_public/admin'
+    | '/_public/profile'
     | '/_public/submit'
     | '/_public/'
     | '/_public/submit/callback'
@@ -108,6 +118,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicAdminRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/profile': {
+      id: '/_public/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof PublicProfileRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/submit/callback': {
       id: '/_public/submit/callback'
       path: '/callback'
@@ -132,12 +149,14 @@ const PublicSubmitRouteWithChildren = PublicSubmitRoute._addFileChildren(
 
 interface PublicRouteChildren {
   PublicAdminRoute: typeof PublicAdminRoute
+  PublicProfileRoute: typeof PublicProfileRoute
   PublicSubmitRoute: typeof PublicSubmitRouteWithChildren
   PublicIndexRoute: typeof PublicIndexRoute
 }
 
 const PublicRouteChildren: PublicRouteChildren = {
   PublicAdminRoute: PublicAdminRoute,
+  PublicProfileRoute: PublicProfileRoute,
   PublicSubmitRoute: PublicSubmitRouteWithChildren,
   PublicIndexRoute: PublicIndexRoute,
 }
