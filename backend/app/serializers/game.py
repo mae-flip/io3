@@ -5,6 +5,7 @@ from sqlmodel import Session
 from app import crud
 from app.models import Game, GameItchCache, GameLinkPublic, GamePublic, GamesPublic, LinkPlatform, TagPublic, User
 from app.services.itch_cache import ensure_fresh, ensure_fresh_many, get_cache, link_id_from_url
+from app.services.user_profile import profile_links_for_displayed_author
 
 
 def _synthetic_link(game: Game) -> GameLinkPublic:
@@ -27,9 +28,18 @@ def game_to_public(
 ) -> GamePublic:
     tag_data = tags if tags is not None else crud.tags_public_from_cache(cache)
     platform_data = platforms if platforms is not None else crud.platforms_public_from_cache(cache)
+    author_name = cache.author_name if cache else None
+    author_url = cache.author_url if cache else None
     submitter_itch_username: str | None = None
-    if game.submitter and game.submitter.itch_username:
-        submitter_itch_username = game.submitter.itch_username
+    submitter_profile_links = []
+    if game.submitter:
+        if game.submitter.itch_username:
+            submitter_itch_username = game.submitter.itch_username
+        submitter_profile_links = profile_links_for_displayed_author(
+            author_url=author_url,
+            author_name=author_name,
+            submitter=game.submitter,
+        )
     return GamePublic(
         id=game.id,
         slug=game.slug,
@@ -40,13 +50,14 @@ def game_to_public(
         status=game.status,
         submitter_id=game.submitter_id,
         submitter_itch_username=submitter_itch_username,
+        submitter_profile_links=submitter_profile_links,
         reviewed_at=game.reviewed_at,
         rejection_reason=game.rejection_reason,
         duplicate_title_warning=game.duplicate_title_warning,
         kudos_count=game.kudos_count,
         featured_at=game.featured_at,
-        author_name=cache.author_name if cache else None,
-        author_url=cache.author_url if cache else None,
+        author_name=author_name,
+        author_url=author_url,
         has_kudos=has_kudos,
         created_at=game.created_at,
         updated_at=game.updated_at,

@@ -4,7 +4,9 @@ import { KudosButton } from "@/components/Home/KudosButton"
 import { GamePriceLabel } from "@/components/Home/GamePriceLabel"
 import { GameTagChip } from "@/components/Home/GameTagChip"
 import { PlatformChip } from "@/components/Home/PlatformChip"
+import { AuthorProfileLinks } from "@/components/Profile/AuthorProfileLinks"
 import { getPrimaryLink } from "@/lib/gameLinks"
+import { profileLinksForDisplayedAuthor } from "@/lib/authorProfileLinks"
 import { orderFeaturedTags } from "@/lib/gameTags"
 import { orderPlatforms } from "@/lib/platformTags"
 import { cn } from "@/lib/utils"
@@ -55,18 +57,11 @@ export function FeaturedGameCard({ game, className }: FeaturedGameCardProps) {
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs md:text-sm">
             <span className="font-sans">
             Author:{" "}
-            {game.author_url ? (
-              <a
-                href={game.author_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-pink hover:underline"
-              >
-                {game.author_name ?? "Unknown"}
-              </a>
-            ) : (
-              <span className="text-pink">{game.author_name ?? "Unknown"}</span>
-            )}
+            <AuthorProfileLinks
+              name={game.author_name ?? "Unknown"}
+              profileLinks={profileLinksForDisplayedAuthor(game)}
+              fallbackUrl={game.author_url}
+            />
           </span>
           <KudosButton game={game} />
         </div>

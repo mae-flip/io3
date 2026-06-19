@@ -42,6 +42,7 @@ export type GamePublic = {
     status: GameStatus;
     submitter_id: string;
     submitter_itch_username?: (string | null);
+    submitter_profile_links?: Array<UserProfileLink>;
     reviewed_at?: (string | null);
     rejection_reason?: (string | null);
     duplicate_title_warning?: boolean;
@@ -203,13 +204,16 @@ export type TagsPublic = {
 };
 
 export type UserProfileLink = {
-    label: string;
     url: string;
     managed_by_itch?: boolean;
 };
 
+export type UserProfileLinkUpdate = {
+    url: string;
+};
+
 export type UserProfileLinksUpdate = {
-    links?: Array<UserProfileLink>;
+    links?: Array<UserProfileLinkUpdate>;
 };
 
 export type UserPublic = {

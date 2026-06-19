@@ -11,7 +11,7 @@ export function ProfileLinkIcon({ url, className }: ProfileLinkIconProps) {
 
   return (
     <Icon
-      className={cn("size-4 shrink-0", className)}
+      className={cn("size-5 shrink-0", className)}
       aria-hidden
     />
   )

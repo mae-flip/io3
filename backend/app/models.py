@@ -83,13 +83,16 @@ class UserPublic(SQLModel):
 
 
 class UserProfileLink(SQLModel):
-    label: str = Field(min_length=1, max_length=64)
     url: str = Field(min_length=1, max_length=2048)
     managed_by_itch: bool = False
 
 
+class UserProfileLinkUpdate(SQLModel):
+    url: str = Field(min_length=1, max_length=2048)
+
+
 class UserProfileLinksUpdate(SQLModel):
-    links: list[UserProfileLink] = Field(default_factory=list, max_length=7)
+    links: list[UserProfileLinkUpdate] = Field(default_factory=list, max_length=7)
 
 
 class ModeratorUserPublic(SQLModel):
@@ -309,6 +312,7 @@ class GamePublic(SQLModel):
     status: GameStatus
     submitter_id: uuid.UUID
     submitter_itch_username: str | None = None
+    submitter_profile_links: list["UserProfileLink"] = Field(default_factory=list)
     reviewed_at: datetime | None = None
     rejection_reason: str | None = None
     duplicate_title_warning: bool = False

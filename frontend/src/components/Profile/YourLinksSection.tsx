@@ -14,43 +14,32 @@ import { handleError } from "@/utils"
 
 const MAX_CUSTOM_LINKS = 7
 
-type EditableProfileLink = {
-  label: string
-  url: string
-}
-
 interface YourLinksSectionProps {
   profileLinks: UserProfileLink[]
   itchUsername?: string | null
 }
 
-function linksEqual(a: EditableProfileLink[], b: EditableProfileLink[]) {
+function linksEqual(a: string[], b: string[]) {
   return JSON.stringify(a) === JSON.stringify(b)
 }
 
-function toCustomEditableLinks(links: UserProfileLink[]): EditableProfileLink[] {
-  return links
-    .filter((link) => !link.managed_by_itch)
-    .map((link) => ({
-      label: link.label,
-      url: link.url,
-    }))
+function toCustomEditableLinks(links: UserProfileLink[]): string[] {
+  return links.filter((link) => !link.managed_by_itch).map((link) => link.url)
 }
 
 function ItchProfileLinkRow({ username }: { username: string }) {
   const profileUrl = `https://${username}.itch.io`
 
   return (
-    <li className="flex gap-3 border-2 border-black/10 bg-faded-plastic/40 p-3">
-      <ProfileLinkIcon url={profileUrl} className="mt-1 shrink-0 text-dark-grey" />
-      <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2 sm:items-end">
-        <ItchManagedField label="Label">itch.io</ItchManagedField>
-        <ItchManagedField label="URL">
+    <li className="flex items-center gap-3 border-2 border-black/10 bg-faded-plastic/40 p-3">
+      <ProfileLinkIcon url={profileUrl} className="text-dark-grey" />
+      <div className="min-w-0 flex-1">
+        <ItchManagedField label="itch.io profile">
           <a
             href={profileUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-black underline hover:no-underline"
+            className="break-all text-black underline hover:no-underline"
           >
             {profileUrl}
           </a>
@@ -70,7 +59,7 @@ export function YourLinksSection({
     () => toCustomEditableLinks(profileLinks),
     [profileLinks],
   )
-  const [links, setLinks] = useState<EditableProfileLink[]>(() => savedCustomLinks)
+  const [links, setLinks] = useState<string[]>(() => savedCustomLinks)
 
   useEffect(() => {
     setLinks(savedCustomLinks)
@@ -83,11 +72,8 @@ export function YourLinksSection({
       UsersService.updateUserProfileLinks({
         requestBody: {
           links: links
-            .map((link) => ({
-              label: link.label.trim(),
-              url: link.url.trim(),
-            }))
-            .filter((link) => link.label && link.url),
+            .map((url) => ({ url: url.trim() }))
+            .filter((link) => link.url),
         },
       }),
     onSuccess: (data) => {
@@ -99,18 +85,12 @@ export function YourLinksSection({
 
   const addLink = () => {
     if (links.length >= MAX_CUSTOM_LINKS) return
-    setLinks((current) => [...current, { label: "", url: "" }])
+    setLinks((current) => [...current, ""])
   }
 
-  const updateLink = (
-    index: number,
-    field: keyof EditableProfileLink,
-    value: string,
-  ) => {
+  const updateLink = (index: number, value: string) => {
     setLinks((current) =>
-      current.map((link, linkIndex) =>
-        linkIndex === index ? { ...link, [field]: value } : link,
-      ),
+      current.map((url, linkIndex) => (linkIndex === index ? value : url)),
     )
   }
 
@@ -131,61 +111,35 @@ export function YourLinksSection({
       <ul className="flex flex-col gap-3">
         {itchUsername ? <ItchProfileLinkRow username={itchUsername} /> : null}
 
-        {links.map((link, index) => (
+        {links.map((url, index) => (
           <li
             key={index}
-            className="flex gap-3 border-2 border-black/10 bg-faded-plastic/40 p-3"
+            className="flex items-center gap-3 border-2 border-black/10 bg-faded-plastic/40 p-3"
           >
             <ProfileLinkIcon
-              url={link.url}
-              className="mt-1 shrink-0 text-dark-grey"
+              url={url}
+              className="text-dark-grey"
             />
-            <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-[minmax(0,10rem)_minmax(0,1fr)_auto] sm:items-end">
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor={`profile-link-label-${index}`}
-                className="font-sans text-xs uppercase tracking-wide text-dark-grey"
-              >
-                Label
-              </label>
-              <Input
-                id={`profile-link-label-${index}`}
-                value={link.label}
-                placeholder="Ko-fi"
-                maxLength={64}
-                onChange={(event) =>
-                  updateLink(index, "label", event.target.value)
-                }
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor={`profile-link-url-${index}`}
-                className="font-sans text-xs uppercase tracking-wide text-dark-grey"
-              >
-                URL
-              </label>
+            <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
               <Input
                 id={`profile-link-url-${index}`}
                 type="url"
-                value={link.url}
-                placeholder="https://ko-fi.com/you"
-                onChange={(event) =>
-                  updateLink(index, "url", event.target.value)
-                }
+                value={url}
+                placeholder="https://your.url/you"
+                aria-label={`Profile link ${index + 1}`}
+                onChange={(event) => updateLink(index, event.target.value)}
               />
-            </div>
-            <Button
-              type="button"
-              variant="default"
-              size="sm"
-              className="w-full font-head-sm uppercase tracking-wide sm:w-auto"
-              onClick={() => removeLink(index)}
-              aria-label={`Remove link ${index + 1}`}
-            >
-              <Trash2 className="size-4" aria-hidden />
-              Remove
-            </Button>
+              <Button
+                type="button"
+                variant="default"
+                size="sm"
+                className="w-full font-head-sm uppercase tracking-wide sm:w-auto"
+                onClick={() => removeLink(index)}
+                aria-label={`Remove link ${index + 1}`}
+              >
+                <Trash2 className="size-4" aria-hidden />
+                Remove
+              </Button>
             </div>
           </li>
         ))}

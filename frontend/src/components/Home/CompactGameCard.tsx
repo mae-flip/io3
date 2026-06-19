@@ -4,7 +4,9 @@ import { KudosButton } from "@/components/Home/KudosButton"
 import { GamePriceLabel } from "@/components/Home/GamePriceLabel"
 import { GameTagChip } from "@/components/Home/GameTagChip"
 import { PlatformChip } from "@/components/Home/PlatformChip"
+import { AuthorProfileLinks } from "@/components/Profile/AuthorProfileLinks"
 import { getPrimaryLink } from "@/lib/gameLinks"
+import { profileLinksForDisplayedAuthor } from "@/lib/authorProfileLinks"
 import { formatGamePrice } from "@/lib/gamePrice"
 import { orderDisplayTags } from "@/lib/gameTags"
 import { orderPlatforms } from "@/lib/platformTags"
@@ -22,17 +24,13 @@ export function CompactGameCard({ game, className }: CompactGameCardProps) {
   const platforms = orderPlatforms(game.platforms ?? [])
 
   const authorLabel = game.author_name ?? "Unknown"
-  const authorElement = game.author_url ? (
-    <a
-      href={game.author_url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="shrink-0 font-sans text-xs text-pink hover:underline"
-    >
-      {authorLabel}
-    </a>
-  ) : (
-    <span className="shrink-0 font-sans text-xs text-pink">{authorLabel}</span>
+  const authorElement = (
+    <AuthorProfileLinks
+      name={authorLabel}
+      profileLinks={profileLinksForDisplayedAuthor(game)}
+      fallbackUrl={game.author_url}
+      className="text-xs"
+    />
   )
 
   const header = (

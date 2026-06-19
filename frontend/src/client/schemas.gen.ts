@@ -223,6 +223,13 @@ export const GamePublicSchema = {
             ],
             title: 'Submitter Itch Username'
         },
+        submitter_profile_links: {
+            items: {
+                '$ref': '#/components/schemas/UserProfileLink'
+            },
+            type: 'array',
+            title: 'Submitter Profile Links'
+        },
         reviewed_at: {
             anyOf: [
                 {
@@ -1005,12 +1012,6 @@ export const TagsPublicSchema = {
 
 export const UserProfileLinkSchema = {
     properties: {
-        label: {
-            type: 'string',
-            maxLength: 64,
-            minLength: 1,
-            title: 'Label'
-        },
         url: {
             type: 'string',
             maxLength: 2048,
@@ -1024,15 +1025,29 @@ export const UserProfileLinkSchema = {
         }
     },
     type: 'object',
-    required: ['label', 'url'],
+    required: ['url'],
     title: 'UserProfileLink'
+} as const;
+
+export const UserProfileLinkUpdateSchema = {
+    properties: {
+        url: {
+            type: 'string',
+            maxLength: 2048,
+            minLength: 1,
+            title: 'Url'
+        }
+    },
+    type: 'object',
+    required: ['url'],
+    title: 'UserProfileLinkUpdate'
 } as const;
 
 export const UserProfileLinksUpdateSchema = {
     properties: {
         links: {
             items: {
-                '$ref': '#/components/schemas/UserProfileLink'
+                '$ref': '#/components/schemas/UserProfileLinkUpdate'
             },
             type: 'array',
             maxItems: 7,

@@ -1,34 +1,32 @@
 from typing import Any
 
-from fastapi import APIRouter
-from pydantic import HttpUrl, TypeAdapter
+from fastapi import APIRouter, HTTPException
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models import UserProfileLink, UserProfileLinksUpdate, UserPublic
+from app.models import UserProfileLinkUpdate, UserProfileLinksUpdate, UserPublic
 from app.services.user_profile import (
+    InvalidProfileLinkUrlError,
     MAX_CUSTOM_PROFILE_LINKS,
     is_default_itch_profile_link,
+    normalize_profile_link_url,
     user_to_public,
 )
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-_http_url_adapter = TypeAdapter(HttpUrl)
-
 
 def _normalize_custom_profile_links(
-    links: list[UserProfileLink], *, username: str | None
+    links: list[UserProfileLinkUpdate], *, username: str | None
 ) -> list[dict[str, str]]:
     normalized: list[dict[str, str]] = []
     for link in links:
-        if link.managed_by_itch or is_default_itch_profile_link(link.url, username):
+        if is_default_itch_profile_link(link.url, username):
             continue
-        normalized.append(
-            {
-                "label": link.label.strip(),
-                "url": str(_http_url_adapter.validate_python(link.url.strip())),
-            }
-        )
+        try:
+            url = normalize_profile_link_url(link.url)
+        except InvalidProfileLinkUrlError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        normalized.append({"url": url})
         if len(normalized) >= MAX_CUSTOM_PROFILE_LINKS:
             break
     return normalized

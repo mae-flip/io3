@@ -135,18 +135,72 @@ def test_read_games_author_name(
     client: TestClient, db: Session
 ) -> None:
     game = create_random_game(db, approved=True)
+    submitter = game.submitter
+    assert submitter is not None
     set_game_cache(
         db,
         game,
-        author_name="MaeFlip",
-        author_url="https://maeflip.itch.io",
+        author_name=submitter.itch_username,
+        author_url=f"https://{submitter.itch_username}.itch.io",
     )
 
     response = client.get(f"{settings.API_V1_STR}/games/")
     assert response.status_code == 200
     item = next(row for row in response.json()["data"] if row["id"] == str(game.id))
-    assert item["author_name"] == "MaeFlip"
-    assert item["author_url"] == "https://maeflip.itch.io"
+    assert item["author_name"] == submitter.itch_username
+    assert item["author_url"] == f"https://{submitter.itch_username}.itch.io"
+    assert len(item["submitter_profile_links"]) == 1
+    assert item["submitter_profile_links"][0]["managed_by_itch"] is True
+
+
+def test_read_games_submitter_profile_links(
+    client: TestClient, db: Session
+) -> None:
+    game = create_random_game(db, approved=True)
+    submitter = game.submitter
+    assert submitter is not None
+    submitter.profile_links = [
+        {"url": "https://bsky.app/profile/example"},
+        {"url": "https://ko-fi.com/example"},
+    ]
+    db.add(submitter)
+    db.commit()
+    set_game_cache(
+        db,
+        game,
+        author_name=submitter.itch_username,
+        author_url=f"https://{submitter.itch_username}.itch.io",
+    )
+
+    response = client.get(f"{settings.API_V1_STR}/games/")
+    assert response.status_code == 200
+    item = next(row for row in response.json()["data"] if row["id"] == str(game.id))
+    assert len(item["submitter_profile_links"]) == 3
+    assert item["submitter_profile_links"][0]["managed_by_itch"] is True
+    assert item["submitter_profile_links"][1]["url"] == "https://bsky.app/profile/example"
+    assert item["submitter_profile_links"][2]["url"] == "https://ko-fi.com/example"
+
+
+def test_read_games_omits_submitter_profile_links_when_author_differs(
+    client: TestClient, db: Session
+) -> None:
+    game = create_random_game(db, approved=True)
+    submitter = game.submitter
+    assert submitter is not None
+    submitter.profile_links = [{"url": "https://bsky.app/profile/example"}]
+    db.add(submitter)
+    db.commit()
+    set_game_cache(
+        db,
+        game,
+        author_name="Someone Else",
+        author_url="https://someoneelse.itch.io",
+    )
+
+    response = client.get(f"{settings.API_V1_STR}/games/")
+    assert response.status_code == 200
+    item = next(row for row in response.json()["data"] if row["id"] == str(game.id))
+    assert item["submitter_profile_links"] == []
 
 
 def test_read_games_sort_title(
